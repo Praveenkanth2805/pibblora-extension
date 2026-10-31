@@ -20,7 +20,6 @@ export function MagicLayer() {
   const { settings } = useStore();
   
   const [isIdle, setIsIdle] = useState(false);
-  // Initialize directly at RB to prevent starting from Top-Left
   const [pos, setPos] = useState(() => getCornerPos('RB'));
   const [fade, setFade] = useState(0); 
   const [isTeleporting, setIsTeleporting] = useState(false);
@@ -30,7 +29,6 @@ export function MagicLayer() {
   const lastX = useRef(0);
   const lastY = useRef(0);
 
-  // Fade in on mount
   useEffect(() => {
     const t = setTimeout(() => setFade(1), 100);
     return () => clearTimeout(t);
@@ -47,13 +45,15 @@ export function MagicLayer() {
     if (isIdle) {
       setIsIdle(false);
       if (walkTimer.current) clearTimeout(walkTimer.current);
-      setFade(0); // Fade out
+      
+      // Fade out and immediately fade in at Right-Bottom
+      setFade(0); 
       setTimeout(() => {
         setIsTeleporting(true);
         currentCorner.current = 'RB';
         setPos(getCornerPos('RB'));
         setTimeout(() => {
-          setFade(1); // Fade in at RB
+          setFade(1);
           setIsTeleporting(false);
         }, 50);
       }, 300); 
@@ -75,18 +75,66 @@ export function MagicLayer() {
 
   useEffect(() => {
     if (!isIdle || !settings.pet.enabled) return;
+    
     const walkSequence = () => {
+      const duration = settings.pet.type === 'snail' ? 35000 : settings.pet.type === 'spider' ? 5000 : 10000;
+
+      // SpiderMan: Bounce vertically (Top<->Bottom) on the same side, or fade-switch sides
+      if (settings.pet.type === 'spiderman') {
+        const roll = Math.random();
+        let nextCorner = currentCorner.current;
+        let isSwitchSide = false;
+
+        if (currentCorner.current === 'RB') {
+          if (roll < 0.5) nextCorner = 'RT';
+          else { nextCorner = 'LB'; isSwitchSide = true; }
+        } else if (currentCorner.current === 'RT') {
+          if (roll < 0.5) nextCorner = 'RB';
+          else { nextCorner = 'LT'; isSwitchSide = true; }
+        } else if (currentCorner.current === 'LB') {
+          if (roll < 0.5) nextCorner = 'LT';
+          else { nextCorner = 'RB'; isSwitchSide = true; }
+        } else if (currentCorner.current === 'LT') {
+          if (roll < 0.5) nextCorner = 'LB';
+          else { nextCorner = 'RT'; isSwitchSide = true; }
+        }
+
+        if (isSwitchSide) {
+          setFade(0); // Fade out to switch sides
+          walkTimer.current = setTimeout(() => {
+            setIsTeleporting(true);
+            currentCorner.current = nextCorner;
+            setPos(getCornerPos(nextCorner));
+            setTimeout(() => {
+              setFade(1); // Fade in at new side
+              setIsTeleporting(false);
+              walkTimer.current = setTimeout(walkSequence, 2500);
+            }, 50);
+          }, 300);
+        } else {
+          // Move vertically (Up/Down) without fading
+          setIsTeleporting(false);
+          currentCorner.current = nextCorner;
+          setPos(getCornerPos(nextCorner));
+          walkTimer.current = setTimeout(walkSequence, 3000); 
+        }
+        return;
+      }
+
+      // Other pets random logic
       const roll = Math.random();
       const action = roll < 0.4 ? 'reverse' : roll < 0.7 ? 'teleport' : 'forward';
       
       if (action === 'teleport') {
-        setFade(0); setIsTeleporting(true);
+        setFade(0); 
+        setIsTeleporting(true);
         walkTimer.current = setTimeout(() => {
           const corners = ['RB', 'LB', 'LT', 'RT'];
           currentCorner.current = corners[Math.floor(Math.random() * corners.length)];
           setPos(getCornerPos(currentCorner.current));
-          setFade(1); setIsTeleporting(false);
-          walkTimer.current = setTimeout(walkSequence, 10000);
+          setFade(1);
+          setIsTeleporting(false);
+          walkTimer.current = setTimeout(walkSequence, duration);
         }, 300);
       } else {
         const seq = ['RB', 'LB', 'LT', 'RT'];
@@ -96,12 +144,12 @@ export function MagicLayer() {
         
         currentCorner.current = seq[idx];
         setPos(getCornerPos(currentCorner.current));
-        walkTimer.current = setTimeout(walkSequence, 10000);
+        walkTimer.current = setTimeout(walkSequence, duration);
       }
     };
     walkTimer.current = setTimeout(walkSequence, 10000);
     return () => { if (walkTimer.current) clearTimeout(walkTimer.current); };
-  }, [isIdle, settings.pet.enabled]);
+  }, [isIdle, settings.pet.enabled, settings.pet.type]);
 
   useEffect(() => {
     if (!settings.cursor.enabled) return;
@@ -179,15 +227,15 @@ export function MagicLayer() {
                   settings.pet.animation === 'float'  ? { y: [0, -10, 0], rotate: [-5, 5, -5] } :
                                                         { rotate: [-15, 15, -15] };
   const iconSrc = settings.pet.customImage ? settings.pet.customImage : petIcons[settings.pet.type]?.src;
-  const walkDuration = settings.pet.type === 'snail' ? 35 : settings.pet.type === 'spider' ? 5 : 10;
+  const walkDuration = settings.pet.type === 'snail' ? 35 : settings.pet.type === 'spider' ? 5 : settings.pet.type === 'spiderman' ? 7 : 10;
 
   return (
     <div style={{ position: 'fixed', left: 0, top: 0, pointerEvents: 'none', zIndex: 99999 }}>
       <motion.div
         animate={{ x: pos.x, y: pos.y, opacity: fade }}
         transition={{ 
-          x: { duration: isTeleporting ? 0 : walkDuration, ease: 'linear' }, 
-          y: { duration: isTeleporting ? 0 : walkDuration, ease: 'linear' },
+          x: { duration: isTeleporting ? 0 : (settings.pet.type === 'spiderman' ? 1.5 : walkDuration), ease: 'linear' }, 
+          y: { duration: isTeleporting ? 0 : (settings.pet.type === 'spiderman' ? 1.5 : walkDuration), ease: settings.pet.type === 'spiderman' ? [0.68, -0.55, 0.265, 1.55] : 'linear' },
           opacity: { duration: 0.3 }
         }}
       >

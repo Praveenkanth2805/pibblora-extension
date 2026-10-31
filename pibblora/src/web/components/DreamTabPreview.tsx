@@ -3,6 +3,8 @@ import { Search, Timer, StickyNote, ListChecks, Clock, Play, RotateCcw, Check } 
 import { useStore } from '../../shared/StoreContext';
 import { presets } from '../../shared/theme';
 import type { ThemePreset } from '../../shared/types';
+import { motion } from 'framer-motion';
+import { petIcons } from '../../shared/theme';
 
 type ThemeColors = { bg: string; surface: string; border: string; text: string; primary: string; accent: string };
 
@@ -28,6 +30,7 @@ function SectionTitle({ icon, title, bg }: { icon: React.ReactNode; title: strin
 export function DreamTabPreview({ forceTheme }: { forceTheme?: ThemePreset }) {
   const { settings } = useStore();
   const [now, setNow] = useState(new Date());
+  const [isTesting, setIsTesting] = useState(false);
   
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -38,18 +41,48 @@ export function DreamTabPreview({ forceTheme }: { forceTheme?: ThemePreset }) {
   const bg = (presets[activeTheme] || presets.cream) as ThemeColors;
   const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+  const handleTestMove = () => {
+    if (isTesting) return;
+    setIsTesting(true);
+    setTimeout(() => setIsTesting(false), 8000);
+  };
+
+  const isSpider = settings.pet.type === 'spiderman';
+  
+  // Spider goes RB -> RT -> LT -> LB -> RB
+  // Other pets go RB -> LB -> LT -> RT -> RB
+  const leftPath = isSpider 
+    ? ['85%', '85%', '10%', '10%', '85%'] 
+    : ['85%', '10%', '10%', '85%', '85%'];
+  const topPath = isSpider 
+    ? ['85%', '10%', '10%', '85%', '85%'] 
+    : ['85%', '85%', '10%', '10%', '85%'];
+
   return (
     <div className="relative w-full overflow-hidden rounded-3xl border shadow-lg" style={{ borderColor: bg.border }}>
       {/* Browser Window Header */}
-      <div className="absolute top-0 left-0 w-full h-8 bg-black/10 flex items-center px-4 gap-1.5 z-10 backdrop-blur-md">
-        <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-        <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-        <span className="ml-2 text-[10px] font-semibold opacity-50">Live Preview</span>
+      <div className="absolute top-0 left-0 w-full h-8 bg-black/10 flex items-center justify-between px-4 z-10 backdrop-blur-md">
+        <div className="flex gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+          <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+          <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+          <span className="ml-2 text-[10px] font-semibold opacity-50">Live Preview</span>
+        </div>
+        
+        {/* Test Button */}
+        {settings.pet.enabled && (
+          <button 
+            onClick={handleTestMove}
+            disabled={isTesting}
+            className="px-2 py-0.5 text-[9px] font-bold rounded bg-black/10 hover:bg-black/20 transition disabled:opacity-50"
+          >
+            {isTesting ? 'Moving...' : 'Test Pet Move'}
+          </button>
+        )}
       </div>
 
       {/* Mini DreamTab Content */}
-      <div className="min-h-[360px] pt-12 pb-6 px-4 flex flex-col items-center transition-colors duration-500" style={{ background: bg.bg, color: bg.text }}>
+      <div className="min-h-[360px] pt-12 pb-6 px-4 flex flex-col items-center transition-colors duration-500 relative" style={{ background: bg.bg, color: bg.text }}>
         
         {settings.dreamtab.showClock && (
           <div className="text-center">
@@ -74,6 +107,25 @@ export function DreamTabPreview({ forceTheme }: { forceTheme?: ThemePreset }) {
             </span>
           ))}
         </div>
+
+        {/* Pet Image - Initial Fade-in at Bottom Right, Moves only when testing */}
+        {settings.pet.enabled && (
+          <motion.img
+            src={petIcons[settings.pet.type]?.src}
+            draggable={false}
+            className="absolute w-8 h-8 object-contain pointer-events-none z-20 drop-shadow-md"
+            initial={{ opacity: 0, left: '85%', top: '85%' }}
+            animate={
+              isTesting 
+                ? { left: leftPath, top: topPath, opacity: 1 }
+                : { left: '85%', top: '85%', opacity: 1 }
+            }
+            transition={{ 
+              duration: isTesting ? 8 : 0.5, 
+              ease: 'linear' 
+            }}
+          />
+        )}
 
         {/* Widgets Grid */}
         <div className="mt-6 grid w-full grid-cols-2 gap-2 max-w-sm">

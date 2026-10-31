@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Cat, MousePointer2, Palette, LayoutGrid, Settings as Cog } from 'lucide-react';
+import { Cat, MousePointer2, Palette, LayoutGrid, Settings as Cog, Chrome } from 'lucide-react'; // Added Chrome
 import { useStore } from '../../shared/StoreContext';
 import { Card, PageHeader } from '../../shared/ui';
 import { PetPreview } from '../../shared/PetPreview';
@@ -10,7 +10,8 @@ const tiles = [
   { to: '/cursor', icon: MousePointer2, title: 'Cursor Studio', desc: 'Pick a trail that feels like you.' },
   { to: '/theme', icon: Palette, title: 'Theme Studio', desc: 'Pastel or dark, your palette.' },
   { to: '/widgets', icon: LayoutGrid, title: 'Widget Manager', desc: 'Choose your DreamTab widgets.' },
-  { to: '/settings', icon: Cog, title: 'Settings', desc: 'Import, export, or start fresh.' },
+  // { to: '/settings', icon: Cog, title: 'Settings', desc: 'Import, export, or start fresh.' },
+  { to: '/extension', icon: Chrome, title: 'Get Extension', desc: 'Install Pibblora for Chrome.' }, // <-- NEW
 ];
 
 export default function Dashboard() {

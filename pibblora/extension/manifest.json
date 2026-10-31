@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Pibblora – A Little Magic in Every Click",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Cute pets, cursor trails, pastel themes, and a dreamy new tab.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -19,6 +19,12 @@
   },
   "chrome_url_overrides": { "newtab": "newtab.html" },
   "permissions": ["storage", "search"],
+  "web_accessible_resources": [
+    {
+      "resources": ["spider.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],

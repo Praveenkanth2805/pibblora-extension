@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sparkles, Cat, MousePointer2, Palette, LayoutGrid, Chrome } from 'lucide-react';
+import { Cat, MousePointer2, Palette, LayoutGrid, Chrome } from 'lucide-react';
 import { Button, Card } from '../../shared/ui';
-import { ExtensionDownload } from '../components/ExtensionDownload'; // <-- NEW
+import { ExtensionDownload } from '../components/ExtensionDownload';
 
 const features = [
   { icon: Cat, title: 'Browser Buddy', desc: 'Animated companions that live on your pages.' },
@@ -16,7 +16,8 @@ export default function Landing() {
     <div className="min-h-screen">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold">
-          <span className="grid h-9 w-9 place-items-center rounded-2xl pibblora-gradient text-ink"><Sparkles size={18} /></span>
+          {/* Changed to Image Logo */}
+          <img src="/pibblora.png" draggable={false} alt="Pibblora" className="h-9 w-9 rounded-2xl object-cover shadow-sm" />
           Pibblora
         </Link>
         <div className="flex items-center gap-2">
@@ -64,7 +65,6 @@ export default function Landing() {
       </section>
 
       <section className="mx-auto mt-20 max-w-6xl px-4 pb-16 space-y-6">
-        {/* NEW: Extension Download Section */}
         <ExtensionDownload />
 
         <Card className="text-center">

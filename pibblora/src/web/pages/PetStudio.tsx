@@ -7,7 +7,8 @@ import { PetPreview } from '../../shared/PetPreview';
 import type { PetAnimation, PetType } from '../../shared/types';
 import { petIcons } from '../../shared/theme';
 
-const types: PetType[] = ['cat', 'bunny', 'star', 'blob', 'pikachu', 'snail', 'spider'];
+// Added 'spiderman' here
+const types: PetType[] = ['cat', 'bunny', 'star', 'blob', 'pikachu', 'snail', 'spider', 'spiderman'];
 const animations: PetAnimation[] = ['bounce', 'float', 'wiggle'];
 const colors = ['#C9B6FF', '#FFC9DE', '#BDE7FF', '#C6F4DC', '#FFE0B2', '#FFA6C9', '#7DD3FC'];
 

@@ -1,5 +1,5 @@
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { Sparkles, LayoutDashboard, Cat, MousePointer2, Palette, LayoutGrid, Settings as Cog, Info, Download } from 'lucide-react';
+import { LayoutDashboard, Cat, MousePointer2, Palette, LayoutGrid, Settings as Cog, Info, Download } from 'lucide-react';
 import { MagicLayer } from '../shared/MagicLayer';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
@@ -9,7 +9,7 @@ import ThemeStudio from './pages/ThemeStudio';
 import WidgetManager from './pages/WidgetManager';
 import SettingsPage from './pages/Settings';
 import About from './pages/About';
-import ExtensionPage from './pages/ExtensionPage'; // <-- NEW
+import ExtensionPage from './pages/ExtensionPage';
 
 const nav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -17,8 +17,8 @@ const nav = [
   { to: '/cursor', label: 'Cursor Studio', icon: MousePointer2 },
   { to: '/theme', label: 'Theme Studio', icon: Palette },
   { to: '/widgets', label: 'Widgets', icon: LayoutGrid },
-//   { to: '/settings', label: 'Settings', icon: Cog },
-  { to: '/extension', label: 'Get Extension', icon: Download }, // <-- NEW
+  // { to: '/settings', label: 'Settings', icon: Cog },
+  { to: '/extension', label: 'Get Extension', icon: Download },
   { to: '/about', label: 'About', icon: Info },
 ];
 
@@ -30,7 +30,8 @@ function Shell({ children }: { children: React.ReactNode }) {
         style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold">
-            <span className="grid h-9 w-9 place-items-center rounded-2xl pibblora-gradient text-ink"><Sparkles size={18} /></span>
+            {/* Changed to Image Logo */}
+            <img src="/pibblora.png" draggable={false} alt="Pibblora" className="h-9 w-9 rounded-2xl object-cover shadow-sm" />
             Pibblora
           </Link>
           <nav className="hidden gap-1 md:flex" aria-label="Primary">
@@ -71,7 +72,7 @@ export default function App() {
         <Route path="/theme" element={<Shell><ThemeStudio /></Shell>} />
         <Route path="/widgets" element={<Shell><WidgetManager /></Shell>} />
         <Route path="/settings" element={<Shell><SettingsPage /></Shell>} />
-        <Route path="/extension" element={<Shell><ExtensionPage /></Shell>} /> {/* <-- NEW */}
+        <Route path="/extension" element={<Shell><ExtensionPage /></Shell>} />
         <Route path="/about" element={<Shell><About /></Shell>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

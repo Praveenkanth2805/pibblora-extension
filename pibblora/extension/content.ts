@@ -10,6 +10,9 @@ const DEFAULTS: Settings = {
   cursor: { enabled: false, style: 'stars', color: '#FFC9DE', size: 18, customCursor: false },
 };
 
+// Locally hosted image for Spiderman
+const SPIDERMAN_IMG = chrome.runtime.getURL('spider.png');
+
 const PET_ICONS: Record<string, string> = {
   cat: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg',
   bunny: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f430.svg',
@@ -17,6 +20,7 @@ const PET_ICONS: Record<string, string> = {
   blob: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f47e.svg',
   snail: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f40c.svg',
   spider: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f577.svg',
+  spiderman: SPIDERMAN_IMG, 
   pikachu: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png',
 };
 
@@ -85,15 +89,18 @@ function resetIdle() {
     if (walkTimer) clearTimeout(walkTimer);
     
     if (petEl) {
-      petEl.style.opacity = '0'; // Fade out at current pos
+      petEl.style.opacity = '0'; 
       setTimeout(() => {
-        petEl!.style.transition = 'none'; // instantly teleport
+        if (!petEl) return;
+        petEl.style.transition = 'none'; 
         currentCorner = 'RB';
         setPetPos('RB');
-        // force reflow
-        void petEl!.offsetWidth;
-        petEl!.style.transition = 'left 10s linear, top 10s linear, opacity 0.3s ease';
-        petEl!.style.opacity = '1'; // Fade in
+        void petEl.offsetWidth; 
+        
+        const petType = (petEl as any).dataset.type;
+        const duration = petType === 'spiderman' ? 7 : 10;
+        petEl.style.transition = `left ${duration}s linear, top ${duration}s linear, opacity 0.3s ease`;
+        if (petEl) petEl.style.opacity = '1';
       }, 300);
     }
   }
@@ -103,7 +110,51 @@ function resetIdle() {
 function walkSequence() {
   if (!isIdle || !petEl) return;
   const petType = (petEl as any).dataset.type || 'cat';
+  
   const walkDuration = petType === 'snail' ? 35 : petType === 'spider' ? 5 : 10;
+
+  if (petType === 'spiderman') {
+    const roll = Math.random();
+    let nextCorner = currentCorner;
+    let isSwitchSide = false;
+
+    if (currentCorner === 'RB') {
+      if (roll < 0.5) nextCorner = 'RT';
+      else { nextCorner = 'LB'; isSwitchSide = true; }
+    } else if (currentCorner === 'RT') {
+      if (roll < 0.5) nextCorner = 'RB';
+      else { nextCorner = 'LT'; isSwitchSide = true; }
+    } else if (currentCorner === 'LB') {
+      if (roll < 0.5) nextCorner = 'LT';
+      else { nextCorner = 'RB'; isSwitchSide = true; }
+    } else if (currentCorner === 'LT') {
+      if (roll < 0.5) nextCorner = 'LB';
+      else { nextCorner = 'RT'; isSwitchSide = true; }
+    }
+
+    if (isSwitchSide) {
+      petEl.style.opacity = '0'; // Fade out
+      setTimeout(() => {
+        if (!petEl) return;
+        petEl.style.transition = 'none';
+        currentCorner = nextCorner;
+        setPetPos(currentCorner);
+        void petEl.offsetWidth;
+        petEl.style.opacity = '1'; // Fade in
+        petEl.style.transition = `left 1.5s linear, top 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease`;
+        walkTimer = setTimeout(walkSequence, 2500);
+      }, 300);
+    } else {
+      // Vertical movement with Bounce effect
+      petEl.style.transition = `left 1.5s linear, top 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease`;
+      currentCorner = nextCorner;
+      setPetPos(currentCorner);
+      walkTimer = setTimeout(walkSequence, 3000);
+    }
+    return;
+  }
+
+  // Other pets normal movement
   petEl.style.transition = `left ${walkDuration}s linear, top ${walkDuration}s linear, opacity 0.3s ease`;
 
   const roll = Math.random();
@@ -115,7 +166,7 @@ function walkSequence() {
       const corners = ['RB', 'LB', 'LT', 'RT'];
       currentCorner = corners[Math.floor(Math.random() * corners.length)];
       setPetPos(currentCorner);
-      petEl!.style.opacity = '1';
+      if (petEl) petEl.style.opacity = '1';
       walkTimer = setTimeout(walkSequence, walkDuration * 1000);
     }, 300);
   } else {
@@ -153,7 +204,6 @@ function mountPet(s: Settings) {
   currentCorner = 'RB';
   setPetPos('RB');
   
-  // Initial fade in
   setTimeout(() => {
     if (petEl) petEl.style.opacity = '1';
   }, 100);

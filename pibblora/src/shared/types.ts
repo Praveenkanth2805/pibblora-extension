@@ -1,5 +1,5 @@
 export type ThemePreset = 'lavender' | 'pink' | 'blue' | 'mint' | 'cream' | 'dark' | 'devotional';
-export type PetType = 'cat' | 'bunny' | 'star' | 'blob' | 'pikachu' | 'snail' | 'spider' | 'custom';
+export type PetType = 'cat' | 'bunny' | 'star' | 'blob' | 'pikachu' | 'snail' | 'spider' | 'spiderman' | 'custom';
 export type PetAnimation = 'bounce' | 'float' | 'wiggle';
 export type CursorStyle = 'stars' | 'hearts' | 'bubbles' | 'trail' | 'neon';
 
