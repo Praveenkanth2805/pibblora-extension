@@ -1,0 +1,13 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pibblora-grad" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C9B6FF"/>
+      <stop offset="0.5" stop-color="#FFC9DE"/>
+      <stop offset="1" stop-color="#BDE7FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="32" fill="url(#pibblora-grad)"/>
+  <path d="M64 24L70.5 50.5L96 57L70.5 63.5L64 90L57.5 63.5L32 57L57.5 50.5L64 24Z" fill="#443B52"/>
+  <circle cx="40" cy="88" r="8" fill="#FFF5E8"/>
+  <circle cx="88" cy="40" r="6" fill="#FFF5E8"/>
+</svg>

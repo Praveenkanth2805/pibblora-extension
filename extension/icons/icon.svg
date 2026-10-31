@@ -1,0 +1,55 @@
+
+
+
+<!-- 
+
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="5" x2="120" y2="124" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A855F7"/>
+      <stop offset=".52" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#4C1D95"/>
+    </linearGradient>
+    <linearGradient id="window" x1="30" y1="28" x2="94" y2="99" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DDD6FE"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="4" y="4" width="120" height="120" rx="32" fill="url(#bg)"/>
+
+  <!-- Browser window -->
+  <rect x="22" y="29" width="78" height="66" rx="12" fill="url(#window)"/>
+  <path d="M22 42Q22 29 34 29H88Q100 29 100 42V46H22Z" fill="#C4B5FD"/>
+
+  <!-- Browser controls -->
+  <circle cx="34" cy="38" r="2.7" fill="#7C3AED"/>
+  <circle cx="43" cy="38" r="2.7" fill="#8B5CF6"/>
+  <circle cx="52" cy="38" r="2.7" fill="#A78BFA"/>
+
+  <!-- Browser content -->
+  <rect x="32" y="56" width="57" height="29" rx="6" fill="#EDE9FE"/>
+  <path d="M43 68L52 77L68 60"
+        stroke="#7C3AED"
+        stroke-width="5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"/>
+
+  <!-- PK Spark -->
+  <path d="M94 11L99 24L112 29L99 34L94 47L89 34L76 29L89 24Z" fill="#FFFFFF"/>
+  <text x="94" y="30"
+        text-anchor="middle"
+        dominant-baseline="central"
+        font-family="Courier New, monospace"
+        font-size="7"
+        font-weight="bold"
+        letter-spacing="-0.8"
+        fill="#6D28D9">PK</text>
+
+  <!-- Small sparkle -->
+  <path d="M76 51L79 58L86 61L79 64L76 71L73 64L66 61L73 58Z" fill="#DDD6FE"/>
+
+  <circle cx="25" cy="105" r="3" fill="#DDD6FE"/>
+  <circle cx="105" cy="91" r="2.5" fill="#FFFFFF"/>
+</svg> -->

@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --c-bg: #FFF5E8;
+  --c-text: #443B52;
+  --c-primary: #C9B6FF;
+  --c-accent: #FFC9DE;
+  --c-surface: rgba(255,255,255,0.85);
+  --c-border: rgba(255,255,255,0.65);
+}
+
+html, body {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: 'Nunito', ui-rounded, system-ui, sans-serif;
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, .font-display { font-family: 'Baloo 2', ui-rounded, system-ui, sans-serif; }
+
+*:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.pibblora-gradient {
+  background: linear-gradient(135deg, #C9B6FF 0%, #FFC9DE 50%, #BDE7FF 100%);
+}
