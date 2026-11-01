@@ -225,9 +225,36 @@ function removePet() {
 }
 
 function mountCursor(s: Settings) {
-  if (s.cursor.enabled && s.cursor.customCursor) document.body.style.cursor = 'none';
-  else document.body.style.cursor = 'auto';
-  if (!s.cursor.enabled) return;
+  if (!s.cursor.enabled) {
+    document.body.style.cursor = 'auto';
+    document.getElementById('pibblora-hide-cursor')?.remove();
+    return;
+  }
+
+  let mainCursorEl: HTMLDivElement | null = null;
+  let styleEl = document.getElementById('pibblora-hide-cursor');
+
+  if (s.cursor.customCursor) {
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = 'pibblora-hide-cursor';
+      styleEl.innerHTML = '* { cursor: none !important; }';
+      document.head.appendChild(styleEl);
+    }
+
+    mainCursorEl = document.createElement('div');
+    Object.assign(mainCursorEl.style, {
+      position: 'fixed', pointerEvents: 'none', zIndex: '2147483647',
+      transform: 'translate(-50%, -50%)', borderRadius: '50%',
+      background: s.cursor.color.startsWith('#') ? s.cursor.color : '#C9B6FF',
+      width: `${s.cursor.size * 0.6}px`, height: `${s.cursor.size * 0.6}px`,
+      transition: 'width 0.2s, height 0.2s'
+    });
+    document.body.appendChild(mainCursorEl);
+  } else {
+    styleEl?.remove();
+    document.body.style.cursor = 'auto';
+  }
 
   const onClick = (e: MouseEvent) => {
     const ripple = document.createElement('div');
@@ -247,49 +274,69 @@ function mountCursor(s: Settings) {
   };
 
   const onMove = (e: MouseEvent) => {
+    if (mainCursorEl) {
+      mainCursorEl.style.left = `${e.clientX}px`;
+      mainCursorEl.style.top = `${e.clientY}px`;
+    }
+
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
-    if (Math.sqrt(dx * dx + dy * dy) < 10) return;
-    
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < 5) return;
+
+    const steps = Math.max(1, Math.floor(distance / 15));
+
+    for (let i = 1; i <= steps; i++) {
+      const x = lastX + (dx * i) / steps;
+      const y = lastY + (dy * i) / steps;
+
+      const dot = document.createElement('div');
+      dot.className = 'pibblora-cursor-dot';
+      
+      if (s.cursor.style === 'neon') {
+        Object.assign(dot.style, {
+          width: `${s.cursor.size}px`, height: `${s.cursor.size}px`,
+          borderRadius: '50%', background: s.cursor.color,
+          boxShadow: `0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.4)`
+        });
+      } else if (s.cursor.style === 'trail') {
+        Object.assign(dot.style, {
+          width: `${s.cursor.size * 0.4}px`, height: `${s.cursor.size * 0.4}px`,
+          borderRadius: '50%', background: s.cursor.color.includes('gradient') ? '#C9B6FF' : s.cursor.color
+        });
+      } else {
+        dot.textContent = CURSOR_EMOJI[s.cursor.style] || '✨';
+        Object.assign(dot.style, {
+          fontSize: `${s.cursor.size}px`, color: s.cursor.color.includes('gradient') ? '#C9B6FF' : s.cursor.color
+        });
+      }
+      
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
+      document.body.appendChild(dot);
+      
+      requestAnimationFrame(() => {
+        dot.style.opacity = '0';
+        dot.style.transform = 'translate(-50%,-50%) translateY(-24px) scale(0.4)';
+      });
+      setTimeout(() => dot.remove(), 700);
+    }
+
     lastX = e.clientX;
     lastY = e.clientY;
-
-    const dot = document.createElement('div');
-    dot.className = 'pibblora-cursor-dot';
-    
-    if (s.cursor.style === 'neon') {
-      Object.assign(dot.style, {
-        width: `${s.cursor.size}px`, height: `${s.cursor.size}px`,
-        borderRadius: '50%', background: s.cursor.color,
-        boxShadow: `0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.4)`
-      });
-    } else if (s.cursor.style === 'trail') {
-      Object.assign(dot.style, {
-        width: `${s.cursor.size * 0.4}px`, height: `${s.cursor.size * 0.4}px`,
-        borderRadius: '50%', background: s.cursor.color.includes('gradient') ? '#C9B6FF' : s.cursor.color
-      });
-    } else {
-      dot.textContent = CURSOR_EMOJI[s.cursor.style] || '✨';
-      Object.assign(dot.style, {
-        fontSize: `${s.cursor.size}px`, color: s.cursor.color.includes('gradient') ? '#C9B6FF' : s.cursor.color
-      });
-    }
-    dot.style.left = `${e.clientX}px`;
-    dot.style.top = `${e.clientY}px`;
-    document.body.appendChild(dot);
-    
-    requestAnimationFrame(() => {
-      dot.style.opacity = '0';
-      dot.style.transform = 'translate(-50%,-50%) translateY(-24px) scale(0.4)';
-    });
-    setTimeout(() => dot.remove(), 700);
   };
 
   window.addEventListener('mousemove', onMove, { passive: true });
   window.addEventListener('click', onClick);
-  cleanupFns.push(() => window.removeEventListener('mousemove', onMove));
-  cleanupFns.push(() => window.removeEventListener('click', onClick));
-  cleanupFns.push(() => { document.body.style.cursor = 'auto'; });
+  
+  cleanupFns.push(() => {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('click', onClick);
+    if (mainCursorEl) mainCursorEl.remove();
+    if (styleEl) styleEl.remove();
+    document.body.style.cursor = 'auto';
+  });
 }
 
 function applyTheme(preset: string) {

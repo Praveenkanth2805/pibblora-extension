@@ -4,9 +4,8 @@ import { useStore } from '../shared/StoreContext';
 import { PetPreview } from '../shared/PetPreview';
 import { Toggle } from '../shared/ui';
 import { cursorEmoji, petIcons, presets } from '../shared/theme';
-import type { PetType, ThemePreset, CursorStyle } from '../shared/types';
+import type { PetType, CursorStyle, ThemePreset } from '../shared/types';
 
-// Added spiderman here
 const petTypes: PetType[] = ['cat', 'bunny', 'star', 'blob', 'pikachu', 'snail', 'spider', 'spiderman'];
 const cursorStyles: CursorStyle[] = ['stars', 'hearts', 'bubbles', 'trail', 'neon'];
 const cursorColors = ['#FFC9DE', '#C9B6FF', '#BDE7FF', '#C6F4DC', '#FFE0B2'];
@@ -45,6 +44,7 @@ export default function Popup() {
         </div>
       </header>
 
+      {/* DreamTab Section */}
       <div className="mb-4 rounded-2xl border p-3 space-y-3" style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -58,6 +58,7 @@ export default function Popup() {
         )}
       </div>
 
+      {/* Browser Buddy Section */}
       <div className="mb-4 rounded-2xl border p-3" style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold">Browser Buddy</span>
@@ -83,6 +84,7 @@ export default function Popup() {
         </div>
       </div>
 
+      {/* Cursor Magic Section */}
       <div className="mb-4 rounded-2xl border p-3" style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold">Cursor Magic</span>
@@ -116,6 +118,21 @@ export default function Popup() {
             </div>
           </div>
         )}
+
+        <div className="mt-3 flex items-center justify-between border-t pt-2" style={{ borderColor: 'var(--c-border)' }}>
+          <span className="text-xs font-semibold">Hide Default Cursor</span>
+          <Toggle checked={settings.cursor.customCursor} label="Custom cursor" onChange={v => update(s => ({ ...s, cursor: { ...s.cursor, customCursor: v } }))} />
+        </div>
+      </div>
+
+      {/* Theme Section */}
+      <div className="mb-4 rounded-2xl border p-3" style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+        <span className="text-sm font-semibold">Theme</span>
+        <div className="mt-2 grid grid-cols-7 gap-1">
+          {(Object.keys(presets) as ThemePreset[]).map(k => (
+            <button key={k} onClick={() => update(s => ({ ...s, theme: { preset: k } }))} className="h-7 rounded-lg border transition hover:scale-110" style={{ background: presets[k].primary, borderColor: settings.theme.preset === k ? 'var(--c-text)' : 'transparent' }} title={k} />
+          ))}
+        </div>
       </div>
 
       <button onClick={openNewTab} className="flex w-full items-center justify-center gap-1 rounded-full px-4 py-2 text-sm font-semibold shadow-md" style={{ background: 'var(--c-primary)' }}>

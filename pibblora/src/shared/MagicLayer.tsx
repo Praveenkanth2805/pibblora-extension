@@ -46,7 +46,6 @@ export function MagicLayer() {
       setIsIdle(false);
       if (walkTimer.current) clearTimeout(walkTimer.current);
       
-      // Fade out and immediately fade in at Right-Bottom
       setFade(0); 
       setTimeout(() => {
         setIsTeleporting(true);
@@ -77,47 +76,18 @@ export function MagicLayer() {
     if (!isIdle || !settings.pet.enabled) return;
     
     const walkSequence = () => {
-      const duration = settings.pet.type === 'snail' ? 35000 : settings.pet.type === 'spider' ? 5000 : 10000;
+      const duration = settings.pet.type === 'spiderman' ? 7000 : settings.pet.type === 'snail' ? 35000 : 10000;
 
-      // SpiderMan: Bounce vertically (Top<->Bottom) on the same side, or fade-switch sides
+      // SpiderMan: Top to bottom bounce on left and right sides
       if (settings.pet.type === 'spiderman') {
-        const roll = Math.random();
-        let nextCorner = currentCorner.current;
-        let isSwitchSide = false;
-
-        if (currentCorner.current === 'RB') {
-          if (roll < 0.5) nextCorner = 'RT';
-          else { nextCorner = 'LB'; isSwitchSide = true; }
-        } else if (currentCorner.current === 'RT') {
-          if (roll < 0.5) nextCorner = 'RB';
-          else { nextCorner = 'LT'; isSwitchSide = true; }
-        } else if (currentCorner.current === 'LB') {
-          if (roll < 0.5) nextCorner = 'LT';
-          else { nextCorner = 'RB'; isSwitchSide = true; }
-        } else if (currentCorner.current === 'LT') {
-          if (roll < 0.5) nextCorner = 'LB';
-          else { nextCorner = 'RT'; isSwitchSide = true; }
-        }
-
-        if (isSwitchSide) {
-          setFade(0); // Fade out to switch sides
-          walkTimer.current = setTimeout(() => {
-            setIsTeleporting(true);
-            currentCorner.current = nextCorner;
-            setPos(getCornerPos(nextCorner));
-            setTimeout(() => {
-              setFade(1); // Fade in at new side
-              setIsTeleporting(false);
-              walkTimer.current = setTimeout(walkSequence, 2500);
-            }, 50);
-          }, 300);
-        } else {
-          // Move vertically (Up/Down) without fading
-          setIsTeleporting(false);
-          currentCorner.current = nextCorner;
-          setPos(getCornerPos(nextCorner));
-          walkTimer.current = setTimeout(walkSequence, 3000); 
-        }
+        const seq = ['RT', 'RB', 'RT', 'LT', 'LB', 'LT']; 
+        let idx = seq.indexOf(currentCorner.current);
+        if (idx === -1) idx = 0; 
+        
+        idx = (idx + 1) % seq.length;
+        currentCorner.current = seq[idx];
+        setPos(getCornerPos(currentCorner.current));
+        walkTimer.current = setTimeout(walkSequence, duration);
         return;
       }
 
@@ -151,9 +121,30 @@ export function MagicLayer() {
     return () => { if (walkTimer.current) clearTimeout(walkTimer.current); };
   }, [isIdle, settings.pet.enabled, settings.pet.type]);
 
+  // Mouse Cursor & Click Effects
   useEffect(() => {
     if (!settings.cursor.enabled) return;
-    document.body.style.cursor = settings.cursor.customCursor ? 'none' : 'auto';
+
+    let mainCursorEl: HTMLDivElement | null = null;
+    let styleEl: HTMLStyleElement | null = null;
+
+    if (settings.cursor.customCursor) {
+      // Hide default cursor globally
+      styleEl = document.createElement('style');
+      styleEl.innerHTML = '* { cursor: none !important; }';
+      document.head.appendChild(styleEl);
+
+      // Create a persistent custom cursor dot
+      mainCursorEl = document.createElement('div');
+      Object.assign(mainCursorEl.style, {
+        position: 'fixed', pointerEvents: 'none', zIndex: '999999',
+        transform: 'translate(-50%, -50%)', borderRadius: '50%',
+        background: settings.cursor.color.startsWith('#') ? settings.cursor.color : 'var(--c-primary)',
+        width: `${settings.cursor.size * 0.6}px`, height: `${settings.cursor.size * 0.6}px`,
+        transition: 'width 0.2s, height 0.2s'
+      });
+      document.body.appendChild(mainCursorEl);
+    }
 
     const onClick = (e: MouseEvent) => {
       const ripple = document.createElement('div');
@@ -173,51 +164,69 @@ export function MagicLayer() {
     };
 
     const onMove = (e: MouseEvent) => {
-      const dx = e.clientX - lastX.current;
-      const dy = e.clientY - lastY.current;
-      if (Math.sqrt(dx * dx + dy * dy) < 10) return;
-      lastX.current = e.clientX;
-      lastY.current = e.clientY;
-
-      const dot = document.createElement('div');
-      Object.assign(dot.style, {
-        position: 'fixed', left: `${e.clientX}px`, top: `${e.clientY}px`,
-        pointerEvents: 'none', zIndex: '999999', transform: 'translate(-50%, -50%)',
-        transition: 'opacity 0.6s ease, transform 0.6s ease'
-      });
-
-      if (settings.cursor.style === 'neon') {
-        Object.assign(dot.style, {
-          width: `${settings.cursor.size}px`, height: `${settings.cursor.size}px`,
-          borderRadius: '50%', background: settings.cursor.color,
-          boxShadow: `0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(0,0,0,0.1)`
-        });
-      } else if (settings.cursor.style === 'trail') {
-        Object.assign(dot.style, {
-          width: `${settings.cursor.size * 0.4}px`, height: `${settings.cursor.size * 0.4}px`,
-          borderRadius: '50%', background: settings.cursor.color.includes('gradient') ? '#C9B6FF' : settings.cursor.color
-        });
-      } else {
-        dot.textContent = cursorEmoji[settings.cursor.style] || '✨';
-        Object.assign(dot.style, {
-          fontSize: `${settings.cursor.size}px`, color: settings.cursor.color.includes('gradient') ? '#C9B6FF' : settings.cursor.color
-        });
+      if (mainCursorEl) {
+        mainCursorEl.style.left = `${e.clientX}px`;
+        mainCursorEl.style.top = `${e.clientY}px`;
       }
 
-      document.body.appendChild(dot);
-      requestAnimationFrame(() => {
-        dot.style.opacity = '0';
-        dot.style.transform = 'translate(-50%, -50%) translateY(-30px) scale(0.5)';
-      });
-      setTimeout(() => dot.remove(), 700);
+      const dx = e.clientX - lastX.current;
+      const dy = e.clientY - lastY.current;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < 5) return;
+
+      // Calculate how many dots to spawn to fill the gap
+      const steps = Math.max(1, Math.floor(distance / 15));
+
+      for (let i = 1; i <= steps; i++) {
+        const x = lastX.current + (dx * i) / steps;
+        const y = lastY.current + (dy * i) / steps;
+
+        const dot = document.createElement('div');
+        Object.assign(dot.style, {
+          position: 'fixed', left: `${x}px`, top: `${y}px`,
+          pointerEvents: 'none', zIndex: '999999', transform: 'translate(-50%, -50%)',
+          transition: 'opacity 0.6s ease, transform 0.6s ease'
+        });
+
+        if (settings.cursor.style === 'neon') {
+          Object.assign(dot.style, {
+            width: `${settings.cursor.size}px`, height: `${settings.cursor.size}px`,
+            borderRadius: '50%', background: settings.cursor.color,
+            boxShadow: `0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(0,0,0,0.1)`
+          });
+        } else if (settings.cursor.style === 'trail') {
+          Object.assign(dot.style, {
+            width: `${settings.cursor.size * 0.4}px`, height: `${settings.cursor.size * 0.4}px`,
+            borderRadius: '50%', background: settings.cursor.color.includes('gradient') ? '#C9B6FF' : settings.cursor.color
+          });
+        } else {
+          dot.textContent = cursorEmoji[settings.cursor.style] || '✨';
+          Object.assign(dot.style, {
+            fontSize: `${settings.cursor.size}px`, color: settings.cursor.color.includes('gradient') ? '#C9B6FF' : settings.cursor.color
+          });
+        }
+
+        document.body.appendChild(dot);
+        requestAnimationFrame(() => {
+          dot.style.opacity = '0';
+          dot.style.transform = 'translate(-50%, -50%) translateY(-30px) scale(0.5)';
+        });
+        setTimeout(() => dot.remove(), 700);
+      }
+
+      lastX.current = e.clientX;
+      lastY.current = e.clientY;
     };
 
     window.addEventListener('click', onClick);
     window.addEventListener('mousemove', onMove, { passive: true });
+    
     return () => {
       window.removeEventListener('click', onClick);
       window.removeEventListener('mousemove', onMove);
-      document.body.style.cursor = 'auto';
+      if (mainCursorEl) mainCursorEl.remove();
+      if (styleEl) styleEl.remove();
     };
   }, [settings.cursor]);
 

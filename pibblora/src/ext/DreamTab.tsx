@@ -339,7 +339,7 @@ export default function DreamTab() {
         </div>
       </header>
 
-      <div id="dreamtab-home" className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-6 pb-6 justify-between overflow-hidden">
+      <div id="dreamtab-home" className="relative z-10 mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-6 pb-28 justify-between overflow-hidden">
         
         <section className="flex flex-col items-center justify-center pt-4 shrink-0">
           {settings.dreamtab.showClock && <Clock textColor={bg.text} />}
