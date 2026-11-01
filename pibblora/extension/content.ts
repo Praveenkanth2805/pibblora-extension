@@ -244,11 +244,12 @@ function mountCursor(s: Settings) {
 
     mainCursorEl = document.createElement('div');
     Object.assign(mainCursorEl.style, {
-      position: 'fixed', pointerEvents: 'none', zIndex: '2147483647',
-      transform: 'translate(-50%, -50%)', borderRadius: '50%',
+      position: 'fixed', left: '0', top: '0', pointerEvents: 'none', zIndex: '2147483647',
+      transform: 'translate3d(0,0,0) translate(-50%, -50%)', borderRadius: '50%',
       background: s.cursor.color.startsWith('#') ? s.cursor.color : '#C9B6FF',
       width: `${s.cursor.size * 0.6}px`, height: `${s.cursor.size * 0.6}px`,
-      transition: 'width 0.2s, height 0.2s'
+      transition: 'width 0.2s, height 0.2s',
+      willChange: 'transform'
     });
     document.body.appendChild(mainCursorEl);
   } else {
@@ -259,66 +260,86 @@ function mountCursor(s: Settings) {
   const onClick = (e: MouseEvent) => {
     const ripple = document.createElement('div');
     Object.assign(ripple.style, {
-      position: 'fixed', left: `${e.clientX}px`, top: `${e.clientY}px`,
+      position: 'fixed', left: '0', top: '0',
+      transform: `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%) scale(1)`,
       width: '20px', height: '20px', borderRadius: '50%',
       border: `2px solid ${s.cursor.color.includes('gradient') ? '#C9B6FF' : s.cursor.color}`, 
-      pointerEvents: 'none', zIndex: '2147483647', transform: 'translate(-50%, -50%) scale(1)',
-      transition: 'all 0.5s ease-out'
+      pointerEvents: 'none', zIndex: '2147483647',
+      transition: 'all 0.5s ease-out',
+      willChange: 'transform, opacity'
     });
     document.body.appendChild(ripple);
     requestAnimationFrame(() => {
-      ripple.style.transform = 'translate(-50%, -50%) scale(4)';
+      ripple.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%) scale(4)`;
       ripple.style.opacity = '0';
     });
     setTimeout(() => ripple.remove(), 500);
   };
 
+  let lastTime = 0;
+  let lastX = 0;
+  let lastY = 0;
+
   const onMove = (e: MouseEvent) => {
     if (mainCursorEl) {
-      mainCursorEl.style.left = `${e.clientX}px`;
-      mainCursorEl.style.top = `${e.clientY}px`;
+      // GPU Accelerated move
+      mainCursorEl.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
     }
+
+    const now = performance.now();
+    if (now - lastTime < 30) return; // Time-based throttle
+    lastTime = now;
 
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance < 5) return;
-
-    const steps = Math.max(1, Math.floor(distance / 15));
+    // Cap the steps to avoid creating thousands of DOM nodes in one go
+    let steps = Math.max(1, Math.floor(distance / 15));
+    if (steps > 5) steps = 5; 
 
     for (let i = 1; i <= steps; i++) {
       const x = lastX + (dx * i) / steps;
       const y = lastY + (dy * i) / steps;
 
       const dot = document.createElement('div');
-      dot.className = 'pibblora-cursor-dot';
       
+      let extraStyles = {};
       if (s.cursor.style === 'neon') {
-        Object.assign(dot.style, {
+        extraStyles = {
           width: `${s.cursor.size}px`, height: `${s.cursor.size}px`,
           borderRadius: '50%', background: s.cursor.color,
           boxShadow: `0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.4)`
-        });
+        };
       } else if (s.cursor.style === 'trail') {
-        Object.assign(dot.style, {
+        extraStyles = {
           width: `${s.cursor.size * 0.4}px`, height: `${s.cursor.size * 0.4}px`,
           borderRadius: '50%', background: s.cursor.color.includes('gradient') ? '#C9B6FF' : s.cursor.color
-        });
+        };
       } else {
         dot.textContent = CURSOR_EMOJI[s.cursor.style] || '✨';
-        Object.assign(dot.style, {
+        extraStyles = {
           fontSize: `${s.cursor.size}px`, color: s.cursor.color.includes('gradient') ? '#C9B6FF' : s.cursor.color
-        });
+        };
       }
+
+      Object.assign(dot.style, {
+        position: 'fixed', left: '0', top: '0',
+        transform: `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`,
+        pointerEvents: 'none', zIndex: '2147483646',
+        transition: 'opacity 0.6s ease, transform 0.6s ease',
+        willChange: 'transform, opacity',
+        ...extraStyles
+      });
       
-      dot.style.left = `${x}px`;
-      dot.style.top = `${y}px`;
       document.body.appendChild(dot);
       
+      // Force reflow so transition triggers correctly
+      void dot.offsetWidth; 
+
       requestAnimationFrame(() => {
         dot.style.opacity = '0';
-        dot.style.transform = 'translate(-50%,-50%) translateY(-24px) scale(0.4)';
+        dot.style.transform = `translate3d(${x}px, ${y - 30}px, 0) translate(-50%, -50%) scale(0.4)`;
       });
       setTimeout(() => dot.remove(), 700);
     }
