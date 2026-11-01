@@ -295,11 +295,8 @@ function mountCursor(s: Settings) {
       const x = lastX + (dx * i) / steps;
       const y = lastY + (dy * i) / steps;
 
-      // Dual Color Logic
-      const activeColor = (s.cursor.dualColor && dualCounter % 2 === 0) 
-        ? s.cursor.color2 
-        : s.cursor.color;
-      dualCounter++;
+      const startColor = s.cursor.color;
+      const endColor = s.cursor.dualColor ? s.cursor.color2 : s.cursor.color;
 
       const dot = document.createElement('div');
       
@@ -307,18 +304,19 @@ function mountCursor(s: Settings) {
       if (s.cursor.style === 'neon') {
         extraStyles = {
           width: `${s.cursor.size}px`, height: `${s.cursor.size}px`,
-          borderRadius: '50%', background: activeColor,
-          boxShadow: `0 0 15px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.4)`
+          borderRadius: '50%', background: startColor,
+          boxShadow: `0 0 15px ${startColor}, 0 0 30px ${startColor}`
         };
       } else if (s.cursor.style === 'trail') {
         extraStyles = {
           width: `${s.cursor.size * 0.4}px`, height: `${s.cursor.size * 0.4}px`,
-          borderRadius: '50%', background: activeColor.includes('gradient') ? '#C9B6FF' : activeColor
+          borderRadius: '50%', background: startColor.includes('gradient') ? '#C9B6FF' : startColor
         };
       } else {
         dot.textContent = CURSOR_EMOJI[s.cursor.style] || '✨';
         extraStyles = {
-          fontSize: `${s.cursor.size}px`, color: activeColor.includes('gradient') ? '#C9B6FF' : activeColor
+          fontSize: `${s.cursor.size}px`, 
+          color: startColor.includes('gradient') ? '#C9B6FF' : startColor
         };
       }
 
@@ -326,7 +324,7 @@ function mountCursor(s: Settings) {
         position: 'fixed', left: '0', top: '0',
         transform: `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`,
         pointerEvents: 'none', zIndex: '2147483646',
-        transition: 'opacity 0.6s ease, transform 0.6s ease',
+        transition: 'opacity 0.6s ease, transform 0.6s ease, background-color 0.6s ease, box-shadow 0.6s ease, color 0.6s ease',
         willChange: 'transform, opacity',
         ...extraStyles
       });
@@ -337,6 +335,17 @@ function mountCursor(s: Settings) {
       requestAnimationFrame(() => {
         dot.style.opacity = '0';
         dot.style.transform = `translate3d(${x}px, ${y - 30}px, 0) translate(-50%, -50%) scale(0.4)`;
+        
+        if (s.cursor.dualColor) {
+          if (s.cursor.style === 'neon') {
+            dot.style.background = endColor;
+            dot.style.boxShadow = `0 0 15px ${endColor}, 0 0 30px ${endColor}`;
+          } else if (s.cursor.style === 'trail') {
+            dot.style.background = endColor.includes('gradient') ? '#C9B6FF' : endColor;
+          } else {
+            dot.style.color = endColor.includes('gradient') ? '#C9B6FF' : endColor;
+          }
+        }
       });
       setTimeout(() => dot.remove(), 700);
     }
