@@ -1,20 +1,27 @@
-import { Download, Chrome, Puzzle, Settings, CheckCircle2 } from "lucide-react";
+
+import {
+  Download,
+  Chrome,
+  Puzzle,
+  Settings,
+  CheckCircle2,
+  Sparkles,
+} from "lucide-react";
 import { Card, Button } from "../../shared/ui";
 
-//github relese link
 const DOWNLOAD_URL =
-  "https://github.com/Praveenkanth2805/pibblora-extension/archive/refs/tags/v1.0.0.zip";
+  "https://github.com/user-attachments/files/34231936/pibblora-extension-v1.1.0.zip";
+
+const EXTENSIONS_URL = "chrome://extensions";
 
 const steps = [
   {
     icon: Download,
     text: "Download the ZIP file using the button below.",
-    shortText: "Download ZIP",
   },
   {
     icon: Puzzle,
-    text: "Extract the ZIP to a folder on your computer.",
-    shortText: "Extract ZIP",
+    text: "Extract the ZIP file to a folder on your computer.",
   },
   {
     icon: Chrome,
@@ -22,69 +29,75 @@ const steps = [
       <>
         Open Chrome and go to{" "}
         <a
-          href="chrome://extensions"
-          className="text-primary underline font-medium cursor-pointer"
+          href={EXTENSIONS_URL}
+          className="font-medium text-primary underline underline-offset-4"
           onClick={(e) => {
             e.preventDefault();
-            window.location.href = "chrome://extensions";
+            window.location.href = EXTENSIONS_URL;
           }}
         >
           chrome://extensions
         </a>
       </>
     ),
-    shortText: "Open Chrome Extensions",
   },
   {
     icon: Settings,
-    text: 'Turn on "Developer mode" (top right corner).',
-    shortText: "Enable Developer Mode",
+    text: 'Turn on "Developer mode" in the top-right corner.',
   },
   {
     icon: CheckCircle2,
-    text: 'Click "Load unpacked" and select the extracted folder.',
-    shortText: "Load unpacked",
+    text: 'Click "Load unpacked" and select the extracted extension folder.',
   },
 ];
+
 export function ExtensionDownload() {
   return (
     <Card className="relative overflow-hidden">
       <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full pibblora-gradient opacity-20 blur-2xl" />
+
       <div className="relative z-10 flex flex-col items-center text-center md:items-start md:text-left">
         <span
           className="mb-2 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
           style={{ background: "var(--c-primary)" }}
         >
-          <Chrome size={12} /> Free & Open Source
+          <Sparkles size={12} />
+          Version 1.1.0 is here!
         </span>
+
         <h3 className="font-display text-2xl font-bold">
           Get Pibblora for Chrome
         </h3>
+
         <p className="mt-1 max-w-lg text-sm opacity-70">
-          Install manually via Developer Mode. No Chrome Web Store required.
+          Customize your browsing experience with Spider-Man and Custom Pets.
+          Install for free using Chrome Developer Mode.
         </p>
 
         <div className="mt-5 flex w-full flex-col gap-4 sm:flex-row sm:items-center">
           <a
             href={DOWNLOAD_URL}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="shrink-0"
           >
             <Button className="w-full sm:w-auto">
-              <Download size={18} /> Download Extension
+              <Download size={18} />
+              Download Latest
             </Button>
           </a>
-          <div className="flex flex-1 flex-wrap justify-center gap-2 text-xs sm:justify-start">
-            {steps.slice(0, 3).map((s, i) => (
-              <div key={i} className="flex items-center gap-1 opacity-70">
-                <span className="grid h-4 w-4 place-items-center rounded-full bg-black/10 text-[10px]">
-                  {i + 1}
-                </span>
-                {s.shortText}
-              </div>
-            ))}
-          </div>
+
+          <a
+            href={EXTENSIONS_URL}
+            onClick={(e) => {
+              e.preventDefault();
+              window.location.href = EXTENSIONS_URL;
+            }}
+            className="inline-flex items-center justify-center gap-2 text-sm font-medium text-primary underline underline-offset-4"
+          >
+            <Chrome size={16} />
+            Open Chrome Extensions
+          </a>
         </div>
 
         <div
@@ -94,16 +107,23 @@ export function ExtensionDownload() {
             background: "rgba(255,255,255,0.4)",
           }}
         >
-          <p className="font-semibold mb-2">Detailed Installation Steps:</p>
-          <ul className="space-y-2">
-            {steps.map((s, i) => {
-              const Icon = s.icon;
+          <p className="mb-3 font-semibold">
+            Installation Steps
+          </p>
+
+          <ul className="space-y-3">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+
               return (
-                <li key={i} className="flex items-start gap-2 opacity-80">
-                  <span className="mt-0.5">
+                <li
+                  key={index}
+                  className="flex items-start gap-2 opacity-80"
+                >
+                  <span className="mt-0.5 shrink-0">
                     <Icon size={14} />
                   </span>
-                  <span>{s.text}</span>
+                  <span>{step.text}</span>
                 </li>
               );
             })}
