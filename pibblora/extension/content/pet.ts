@@ -43,10 +43,7 @@ function getCornerPos(corner: string) {
 
 
 function createWebSVG() {
-  if (webSvg) webSvg.remove();
-
-  webAnimations.forEach(animation => animation.cancel());
-  webAnimations = [];
+  if (webSvg) return;
 
   const svgNS = 'http://www.w3.org/2000/svg';
   const width = window.innerWidth;
@@ -76,6 +73,7 @@ function createWebSVG() {
 
   group.setAttribute('fill', 'none');
   group.setAttribute('stroke', color);
+  group.setAttribute('opacity', '0');
   group.setAttribute('stroke-width', '1.5');
   group.setAttribute('stroke-opacity', '0.95');
   group.setAttribute('stroke-linecap', 'round');
@@ -186,6 +184,8 @@ function triggerWebDraw() {
     );
 
     webAnimations.push(animation);
+    const group = webSvg?.querySelector('g');
+group?.setAttribute('opacity', '1');
   });
 }
 
@@ -245,20 +245,21 @@ function walkSequence() {
   const petType = (petEl as any).dataset.type || 'cat';
   
 if (petType === 'spider') {
-  if (!webSvg) {
+if (!webSvg) {
+  petEl.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
+
+  const center = getCornerPos('CENTER');
+  petEl.style.left = `${center.x}px`;
+  petEl.style.top = `${center.y}px`;
+  currentCorner = 'CENTER';
+
+  webDrawTimer = setTimeout(() => {
+    if (!isIdle || !petEl) return;
+
     createWebSVG();
-
-    petEl.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
-
-    const center = getCornerPos('CENTER');
-    petEl.style.left = `${center.x}px`;
-    petEl.style.top = `${center.y}px`;
-    currentCorner = 'CENTER';
-
-    webDrawTimer = setTimeout(() => {
-      triggerWebDraw();
-      webDrawTimer = null;
-    }, 2000);
+    triggerWebDraw();
+    webDrawTimer = null;
+  }, 2000);
 
     walkTimer = setTimeout(walkSequence, 12000);
   } else {

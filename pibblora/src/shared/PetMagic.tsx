@@ -207,101 +207,101 @@ useEffect(() => {
   return () => clearTimeout(firstTimer);
 }, [isIdle, settings.pet.enabled, settings.pet.type]);
 
+
 useEffect(() => {
-  if (!isIdle || !settings.pet.enabled || settings.pet.type !== 'spider') return;
+  if (!isIdle || !settings.pet.enabled) return;
 
-  let timer: ReturnType<typeof setTimeout>;
+  let cancelled = false;
 
-  if (webPhase === 1) {
-    timer = setTimeout(() => setWebPhase(2), 2000);
-  } else if (webPhase === 2) {
-    timer = setTimeout(() => {
-      const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
-      const next = corners[Math.floor(Math.random() * corners.length)];
+  const moveSpider = () => {
+    if (cancelled) return;
 
-      currentCorner.current = next;
-      setPos(getCornerPos(next));
-      setWebPhase(3);
-    }, 9000);
-  } else if (webPhase === 3) {
-    timer = setTimeout(() => {
-      const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
-      const next = corners[Math.floor(Math.random() * corners.length)];
+    const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
+    const next = corners[Math.floor(Math.random() * corners.length)];
 
-      currentCorner.current = next;
-      setPos(getCornerPos(next));
-    }, 6000);
+    currentCorner.current = next;
+    setPos(getCornerPos(next));
+    walkTimer.current = setTimeout(moveSpider, 6000);
+  };
+
+  const walkSequence = () => {
+    if (cancelled) return;
+
+    const duration = settings.pet.type === 'spiderman' ? 7000 :
+      settings.pet.type === 'snail' ? 35000 : 10000;
+
+    if (settings.pet.type === 'spiderman') {
+      const seq = ['RT', 'RB', 'RT', 'LT', 'LB', 'LT'];
+      let idx = seq.indexOf(currentCorner.current);
+      if (idx === -1) idx = 0;
+
+      currentCorner.current = seq[(idx + 1) % seq.length];
+      setPos(getCornerPos(currentCorner.current));
+      walkTimer.current = setTimeout(walkSequence, duration);
+      return;
+    }
+
+    const roll = Math.random();
+    const action = settings.pet.type === 'snail'
+      ? (roll < 0.5 ? 'reverse' : 'forward')
+      : (roll < 0.4 ? 'reverse' : roll < 0.7 ? 'teleport' : 'forward');
+
+    if (action === 'teleport') {
+      setFade(0);
+      walkTimer.current = setTimeout(() => {
+        if (cancelled) return;
+
+        const corners = ['RB', 'LB', 'LT', 'RT'];
+        currentCorner.current = corners[Math.floor(Math.random() * corners.length)];
+        setPos(getCornerPos(currentCorner.current));
+        setFade(1);
+        walkTimer.current = setTimeout(walkSequence, duration);
+      }, 300);
+    } else {
+      const seq = ['RB', 'LB', 'LT', 'RT'];
+      let idx = seq.indexOf(currentCorner.current);
+      if (idx === -1) idx = 0;
+
+      idx = action === 'forward'
+        ? (idx + 1) % seq.length
+        : (idx - 1 + seq.length) % seq.length;
+
+      currentCorner.current = seq[idx];
+      setPos(getCornerPos(currentCorner.current));
+      walkTimer.current = setTimeout(walkSequence, duration);
+    }
+  };
+
+  if (settings.pet.type === 'spider') {
+    walkTimer.current = setTimeout(() => {
+      if (cancelled) return;
+
+      currentCorner.current = 'CENTER';
+setPos(getCornerPos('CENTER'));
+
+walkTimer.current = setTimeout(() => {
+  if (cancelled) return;
+
+  setWebPhase(1);
+
+  walkTimer.current = setTimeout(() => {
+    if (cancelled) return;
+
+    setWebPhase(2);
+    walkTimer.current = setTimeout(moveSpider, 9000);
+  }, 2000);
+}, 2000);
+    }, 10000);
+  } else {
+    walkTimer.current = setTimeout(walkSequence, 10000);
   }
 
-  return () => clearTimeout(timer);
-}, [isIdle, settings.pet.enabled, settings.pet.type, webPhase]);
+  return () => {
+    cancelled = true;
+    if (walkTimer.current) clearTimeout(walkTimer.current);
+  };
+}, [isIdle, settings.pet.enabled, settings.pet.type]);
 
-  useEffect(() => {
-    if (!isIdle || !settings.pet.enabled) return;
-    
-    const walkSequence = () => {
-      // Spider Custom Web Logic
-      if (settings.pet.type === 'spider') {
-        if (webPhase === 0) {
-          setWebPhase(1);
-          currentCorner.current = 'CENTER';
-          setPos(getCornerPos('CENTER'));
-          walkTimer.current = setTimeout(walkSequence, 2000);
-        } else if (webPhase === 1) {
-  setWebPhase(2);
-  walkTimer.current = setTimeout(walkSequence, 8000);
-} else {
-          const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
-          const next = corners[Math.floor(Math.random() * corners.length)];
-          currentCorner.current = next;
-          setPos(getCornerPos(next));
-          walkTimer.current = setTimeout(walkSequence, 6000);
-        }
-        return;
-      }
-
-      const duration = settings.pet.type === 'spiderman' ? 7000 : settings.pet.type === 'snail' ? 35000 : 10000;
-
-      if (settings.pet.type === 'spiderman') {
-        const seq = ['RT', 'RB', 'RT', 'LT', 'LB', 'LT']; 
-        let idx = seq.indexOf(currentCorner.current);
-        if (idx === -1) idx = 0; 
-        
-        idx = (idx + 1) % seq.length;
-        currentCorner.current = seq[idx];
-        setPos(getCornerPos(currentCorner.current));
-        walkTimer.current = setTimeout(walkSequence, duration);
-        return;
-      }
-
-      const roll = Math.random();
-      const action = settings.pet.type === 'snail' 
-        ? (roll < 0.5 ? 'reverse' : 'forward')
-        : (roll < 0.4 ? 'reverse' : roll < 0.7 ? 'teleport' : 'forward');
-      
-      if (action === 'teleport') {
-        setFade(0); 
-        walkTimer.current = setTimeout(() => {
-          const corners = ['RB', 'LB', 'LT', 'RT'];
-          currentCorner.current = corners[Math.floor(Math.random() * corners.length)];
-          setPos(getCornerPos(currentCorner.current));
-          setFade(1);
-          walkTimer.current = setTimeout(walkSequence, duration);
-        }, 300);
-      } else {
-        const seq = ['RB', 'LB', 'LT', 'RT'];
-        let idx = seq.indexOf(currentCorner.current);
-        if (action === 'forward') idx = (idx + 1) % seq.length;
-        else idx = (idx - 1 + seq.length) % seq.length;
-        
-        currentCorner.current = seq[idx];
-        setPos(getCornerPos(currentCorner.current));
-        walkTimer.current = setTimeout(walkSequence, duration);
-      }
-    };
-    walkTimer.current = setTimeout(walkSequence, 10000);
-    return () => { if (walkTimer.current) clearTimeout(walkTimer.current); };
-  }, [isIdle, settings.pet.enabled, settings.pet.type, webPhase]);
 
   const animate = settings.pet.animation === 'bounce' ? { y: [0, -20, 0] } :
                   settings.pet.animation === 'float'  ? { y: [0, -10, 0], rotate: [-5, 5, -5] } :
