@@ -336,7 +336,7 @@ export function MagicLayer() {
         left: 0,
         top: 0,
         pointerEvents: "none",
-        zIndex: 5,
+        zIndex: 50,
       }}
     >
       <motion.div
