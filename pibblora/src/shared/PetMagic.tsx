@@ -30,28 +30,108 @@ export default function PetMagic() {
   const { settings } = useStore();
 
   const [isIdle, setIsIdle] = useState(false);
+const [isTesting, setIsTesting] = useState(false);
+const isTestingRef = useRef(isTesting);
+isTestingRef.current = isTesting;
   const [pos, setPos] = useState(() => getCornerPos("RB"));
   const [fade, setFade] = useState(0);
-  const [isTeleporting, setIsTeleporting] = useState(false);
+
   const [webPhase, setWebPhase] = useState(0);
 
   const currentCorner = useRef("RB");
   const walkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const crawlElement = useRef<HTMLDivElement>(null);
-
+const isIdleRef = useRef(isIdle);
+isIdleRef.current = isIdle;
   const webColor =
     presets[settings.theme.preset]?.primary || "#C9B6FF";
 
-  const isSpiderActive =
-    isIdle &&
-    settings.pet.enabled &&
-    settings.pet.type === "spider";
+    const shouldAnimate =
+  (isIdle || isTesting) && settings.pet.enabled;
+
+const isSpiderActive =
+  shouldAnimate && settings.pet.type === "spider";
 
   const { start: startSpider, stop: stopSpider } = useSpiderCrawler({
     active: isSpiderActive,
     crawlElement
   });
+
+useEffect(() => {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const resetPet = () => {
+    isIdleRef.current = false;
+    isTestingRef.current = false;
+    setIsIdle(false);
+    setIsTesting(false);
+
+    if (walkTimer.current) {
+      clearTimeout(walkTimer.current);
+      walkTimer.current = null;
+    }
+
+    stopSpider();
+    currentCorner.current = "RB";
+    setWebPhase(0);
+    setFade(0);
+
+    const resetPosition = getCornerPos("RB");
+
+    if (crawlElement.current) {
+      crawlElement.current.style.left = `${resetPosition.x}px`;
+      crawlElement.current.style.top = `${resetPosition.y}px`;
+    }
+
+    setPos(resetPosition);
+    setTimeout(() => setFade(1), 50);
+  };
+
+  const startIdleTimer = () => {
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+
+    idleTimer.current = setTimeout(() => {
+      isIdleRef.current = true;
+      setIsIdle(true);
+    }, 30000);
+  };
+
+  const stopTest = () => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+
+    resetPet();
+    startIdleTimer();
+  };
+
+  const handleTest = () => {
+    if (timer) clearTimeout(timer);
+    if (idleTimer.current) {
+      clearTimeout(idleTimer.current);
+      idleTimer.current = null;
+    }
+
+    isIdleRef.current = false;
+    setIsIdle(false);
+    isTestingRef.current = true;
+    setIsTesting(true);
+
+    timer = setTimeout(stopTest, 15000);
+  };
+
+  window.addEventListener("pibblora:pet-test", handleTest);
+  window.addEventListener("pibblora:pet-test-stop", stopTest);
+
+  return () => {
+    window.removeEventListener("pibblora:pet-test", handleTest);
+    window.removeEventListener("pibblora:pet-test-stop", stopTest);
+
+    if (timer) clearTimeout(timer);
+  };
+}, [stopSpider]);
 
   useEffect(() => {
     const timer = setTimeout(() => setFade(1), 100);
@@ -68,10 +148,13 @@ export default function PetMagic() {
   }, [isIdle]);
 
   const resetIdle = useCallback(() => {
+        if (isTestingRef.current) return;
     if (idleTimer.current) clearTimeout(idleTimer.current);
 
-    if (isIdle) {
-      setIsIdle(false);
+
+if (isIdleRef.current) {
+  isIdleRef.current = false;
+  setIsIdle(false);
 
       if (walkTimer.current) {
         clearTimeout(walkTimer.current);
@@ -98,11 +181,31 @@ export default function PetMagic() {
       }, 300);
     }
 
-    idleTimer.current = setTimeout(() => setIsIdle(true), 30000);
-  }, [isIdle, stopSpider]);
+    idleTimer.current = setTimeout(() => {
+  isIdleRef.current = true;
+  setIsIdle(true);
+}, 30000);
+  }, [stopSpider]);
 
   useEffect(() => {
-    if (!isIdle || !settings.pet.enabled) return;
+  const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
+
+  resetIdle();
+
+  events.forEach(event => {
+    window.addEventListener(event, resetIdle);
+  });
+
+  return () => {
+    events.forEach(event => {
+      window.removeEventListener(event, resetIdle);
+    });
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+  };
+}, [resetIdle]);
+
+  useEffect(() => {
+    if (!shouldAnimate) return;
 
     let cancelled = false;
 
@@ -201,12 +304,12 @@ export default function PetMagic() {
 
             walkTimer.current = setTimeout(() => {
               if (!cancelled) startSpider();
-            }, 6500);
-          }, 2000);
-        }, 2000);
-      }, 10000);
+            }, isTestingRef.current ? 0 : 6500);
+          },isTestingRef.current ? 0 : 2000);
+        },isTestingRef.current ? 0 : 2000);
+      },isTestingRef.current ? 0 : 10000);
     } else {
-      walkTimer.current = setTimeout(walkSequence, 10000);
+      walkTimer.current = setTimeout(walkSequence,isTestingRef.current ? 0 : 10000);
     }
 
     return () => {
@@ -219,14 +322,13 @@ export default function PetMagic() {
 
       stopSpider();
     };
-  }, [
-    isIdle,
-    settings.pet.enabled,
-    settings.pet.type,
-    settings.pet.size,
-    startSpider,
-    stopSpider
-  ]);
+}, [
+  shouldAnimate,
+  settings.pet.type,
+  settings.pet.size,
+  startSpider,
+  stopSpider
+]);
 
   useEffect(() => {
     return () => {
@@ -323,11 +425,11 @@ export default function PetMagic() {
             }}
             transition={{
               x: {
-                duration: isTeleporting ? 0 : walkDuration,
+                duration: walkDuration,
                 ease: "linear"
               },
               y: {
-                duration: isTeleporting ? 0 : walkDuration,
+                duration: walkDuration,
                 ease: "linear"
               },
               opacity: { duration: 0.3 }

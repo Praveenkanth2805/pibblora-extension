@@ -1,23 +1,47 @@
+
 import type {
   SpiderGraph,
   SpiderIntersection,
   SpiderNodePoint
 } from "./types";
 
+const SAMPLE_STEP = 6;
+const MAX_DISTANCE_SQUARED = 64;
+
 export function buildSpiderGraph(): SpiderGraph | null {
   const spokes = Array.from(
-    document.querySelectorAll<SVGGeometryElement>(
-      ".spider-web-spoke"
-    )
+    document.querySelectorAll<SVGGeometryElement>(".spider-web-spoke")
   );
 
   const rings = Array.from(
-    document.querySelectorAll<SVGGeometryElement>(
-      ".spider-web-ring"
-    )
+    document.querySelectorAll<SVGGeometryElement>(".spider-web-ring")
   );
 
   if (!spokes.length || !rings.length) return null;
+
+  // Calculate ring geometry only once.
+  const ringSamples = rings.map(ring => {
+    const total = ring.getTotalLength();
+    const points: { length: number; x: number; y: number }[] = [];
+
+    for (let length = 0; length < total; length += SAMPLE_STEP) {
+      const point = ring.getPointAtLength(length);
+      points.push({
+        length,
+        x: point.x,
+        y: point.y
+      });
+    }
+
+    const end = ring.getPointAtLength(total);
+    points.push({
+      length: total,
+      x: end.x,
+      y: end.y
+    });
+
+    return { total, points };
+  });
 
   const graph: SpiderGraph = new Map();
 
@@ -66,17 +90,12 @@ export function buildSpiderGraph(): SpiderGraph | null {
 
     if (!lineLengthSquared) return;
 
-    rings.forEach((ring, ri) => {
-      const ringTotal = ring.getTotalLength();
-      let bestDistance = Infinity;
+    ringSamples.forEach(({ points }, ri) => {
+      let bestDistanceSquared = Infinity;
       let bestSpokeLength = 0;
       let bestRingLength = 0;
 
-      for (let length = 0; length <= ringTotal; length += 1) {
-        const ringPoint = ring.getPointAtLength(
-          Math.min(length, ringTotal)
-        );
-
+      for (const ringPoint of points) {
         const projection =
           ((ringPoint.x - start.x) * dx +
             (ringPoint.y - start.y) * dy) /
@@ -84,24 +103,21 @@ export function buildSpiderGraph(): SpiderGraph | null {
 
         const clamped = Math.max(0, Math.min(1, projection));
 
-        const spokePoint = {
-          x: start.x + dx * clamped,
-          y: start.y + dy * clamped
-        };
+        const spokeX = start.x + dx * clamped;
+        const spokeY = start.y + dy * clamped;
 
-        const distance = Math.hypot(
-          ringPoint.x - spokePoint.x,
-          ringPoint.y - spokePoint.y
-        );
+        const diffX = ringPoint.x - spokeX;
+        const diffY = ringPoint.y - spokeY;
+        const distanceSquared = diffX * diffX + diffY * diffY;
 
-        if (distance < bestDistance) {
-          bestDistance = distance;
+        if (distanceSquared < bestDistanceSquared) {
+          bestDistanceSquared = distanceSquared;
           bestSpokeLength = clamped * spokeTotal;
-          bestRingLength = Math.min(length, ringTotal);
+          bestRingLength = ringPoint.length;
         }
       }
 
-      if (bestDistance <= 8) {
+      if (bestDistanceSquared <= MAX_DISTANCE_SQUARED) {
         intersections.set(`${si}-${ri}`, {
           spokeLength: bestSpokeLength,
           ringLength: bestRingLength
@@ -150,7 +166,7 @@ export function buildSpiderGraph(): SpiderGraph | null {
   });
 
   rings.forEach((ring, ri) => {
-    const total = ring.getTotalLength();
+    const total = ringSamples[ri].total;
 
     const points: SpiderNodePoint[] = spokes
       .map((_, si) => {

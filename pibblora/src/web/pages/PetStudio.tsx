@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../shared/StoreContext';
@@ -16,6 +16,36 @@ export default function PetStudio() {
   const { settings, update } = useStore();
   const p = settings.pet;
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isTesting, setIsTesting] = useState(false);
+const testTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+const stopTest = () => {
+  if (testTimerRef.current) {
+    clearTimeout(testTimerRef.current);
+    testTimerRef.current = null;
+  }
+  setIsTesting(false);
+  window.dispatchEvent(new Event('pibblora:pet-test-stop'));
+};
+
+const handleTest = () => {
+  if (isTesting) {
+    stopTest();
+    return;
+  }
+
+  setIsTesting(true);
+  window.dispatchEvent(new Event('pibblora:pet-test'));
+
+  testTimerRef.current = setTimeout(stopTest, 15000);
+};
+
+useEffect(() => {
+  return () => {
+    if (testTimerRef.current) clearTimeout(testTimerRef.current);
+  };
+}, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,7 +107,26 @@ export default function PetStudio() {
                 </button>
               ))}
             </div>
+
+            <div className="mt-4">
+<button
+  onClick={handleTest}
+  disabled={!p.enabled}
+  className="w-full rounded-xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+  style={{
+    background: isTesting ? '#EF4444' : 'var(--c-primary)',
+    color: isTesting ? '#FFFFFF' : 'var(--c-text)',
+  }}
+>
+  {isTesting ? '■ Stop Animation' : '▶ Test Animation'}
+</button>
+
+  <p className="mt-2 text-xs text-center opacity-60">
+    Preview your pet animation without waiting for inactivity.
+  </p>
+</div>
           </Section>
+          
           <Section title="Look">
             <Field label={`Size: ${p.size}px`}>
               <input type="range" min={32} max={120} value={p.size}
