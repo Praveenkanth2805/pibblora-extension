@@ -11,6 +11,8 @@ let walkTimer: ReturnType<typeof setTimeout> | null = null;
 let webDrawTimer: ReturnType<typeof setTimeout> | null = null;
 let currentCorner = 'RB';
 let currentTheme = 'cream';
+let crawlFrame: number | null = null;
+let lastSilk: SVGGeometryElement | null = null;
 
 export function setTheme(preset: string) {
   currentTheme = preset;
@@ -203,7 +205,12 @@ function setPetPos(corner: string) {
 
 function resetIdle(cleanupFns: (() => void)[]) {
   if (idleTimer) clearTimeout(idleTimer);
+if (crawlFrame !== null) {
+  cancelAnimationFrame(crawlFrame);
+  crawlFrame = null;
+}
 
+lastSilk = null;
   if (isIdle) {
     isIdle = false;
 
@@ -245,59 +252,116 @@ function resetIdle(cleanupFns: (() => void)[]) {
 }
 
 function crawlOnWeb() {
-  if (!petEl || !webSvg || !isIdle) return;
+  if (!isIdle || !petEl || !webSvg) return;
 
-  const paths = Array.from(
-    webSvg.querySelectorAll<SVGLineElement | SVGPathElement>('.web-silk')
+  const silkElements = Array.from(
+    webSvg.querySelectorAll<SVGGeometryElement>('.web-silk')
   );
 
-  if (!paths.length) return;
+  if (!silkElements.length) return;
 
-  const path = paths[Math.floor(Math.random() * paths.length)];
-  const length = path.getTotalLength();
-  const reverse = Math.random() > 0.5;
+  const rect = petEl.getBoundingClientRect();
+  const offsetX = rect.width / 2;
+  const offsetY = rect.height / 2;
 
-  const start = reverse ? length : 0;
-  const end = reverse ? 0 : length;
-  const duration = 3500 + Math.random() * 2500;
+  const currentX = rect.left + offsetX;
+  const currentY = rect.top + offsetY;
 
-  const startPoint = path.getPointAtLength(start);
-  const endPoint = path.getPointAtLength(end);
+  const candidates: {
+    element: SVGGeometryElement;
+    length: number;
+    point: DOMPoint;
+    distance: number;
+  }[] = [];
 
-  petEl.style.transition = 'none';
-  petEl.style.left = `${startPoint.x - 32}px`;
-  petEl.style.top = `${startPoint.y - 32}px`;
+  silkElements.forEach(element => {
+    const length = element.getTotalLength();
 
-  void petEl.offsetWidth;
+    if (!length) return;
 
-  const animation = petEl.animate(
-    [
-      {
-        left: `${startPoint.x - 32}px`,
-        top: `${startPoint.y - 32}px`,
-      },
-      {
-        left: `${endPoint.x - 32}px`,
-        top: `${endPoint.y - 32}px`,
-      },
-    ],
-    {
-      duration,
-      easing: 'linear',
-      fill: 'forwards',
+    let nearestPoint: DOMPoint | null = null;
+    let nearestLength = 0;
+    let nearestDistance = Infinity;
+
+    for (let i = 0; i <= length; i += 5) {
+      const point = element.getPointAtLength(Math.min(i, length));
+      const distance = Math.hypot(
+        point.x - currentX,
+        point.y - currentY
+      );
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestPoint = point;
+        nearestLength = Math.min(i, length);
+      }
     }
+
+    if (nearestPoint && nearestDistance <= 24) {
+      candidates.push({
+        element,
+        length: nearestLength,
+        point: nearestPoint,
+        distance: nearestDistance
+      });
+    }
+  });
+
+  if (!candidates.length) return;
+
+  const alternatives = candidates.filter(
+    item => item.element !== lastSilk
   );
 
-  webAnimations.push(animation);
+  const choices = alternatives.length ? alternatives : candidates;
+  const selected = choices[Math.floor(Math.random() * choices.length)];
 
-  animation.onfinish = () => {
-    if (!isIdle || !petEl) return;
+  const element = selected.element;
+  const totalLength = element.getTotalLength();
 
-    animation.cancel();
-    webAnimations = webAnimations.filter(item => item !== animation);
+  const direction = Math.random() > 0.5 ? 1 : -1;
+  const startLength = selected.length;
 
-    walkTimer = setTimeout(crawlOnWeb, 700);
+  const endLength = direction === 1 ? totalLength : 0;
+  const distance = Math.abs(endLength - startLength);
+
+  if (distance < 5) {
+    lastSilk = element;
+    walkTimer = setTimeout(crawlOnWeb, 100);
+    return;
+  }
+
+  lastSilk = element;
+
+  const duration = Math.max(1200, distance * 18);
+  const startTime = performance.now();
+
+  const animate = (now: number) => {
+    if (!isIdle || !petEl) {
+      crawlFrame = null;
+      return;
+    }
+
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = progress * progress * (3 - 2 * progress);
+
+    const currentLength =
+      startLength + (endLength - startLength) * eased;
+
+    const point = element.getPointAtLength(currentLength);
+
+    petEl.style.left = `${point.x - offsetX}px`;
+    petEl.style.top = `${point.y - offsetY}px`;
+
+    if (progress < 1) {
+      crawlFrame = requestAnimationFrame(animate);
+    } else {
+      crawlFrame = null;
+      walkTimer = setTimeout(crawlOnWeb, 80);
+    }
   };
+
+  crawlFrame = requestAnimationFrame(animate);
 }
 
 function walkSequence() {
@@ -306,26 +370,16 @@ function walkSequence() {
   
 if (petType === 'spider') {
   if (!webSvg) {
-    petEl.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
-
-    const center = getCornerPos('CENTER');
-    petEl.style.left = `${center.x}px`;
-    petEl.style.top = `${center.y}px`;
+    setPetPos('CENTER');
     currentCorner = 'CENTER';
 
     walkTimer = setTimeout(() => {
-      if (!isIdle || !petEl) return;
+      if (!isIdle) return;
 
       createWebSVG();
       triggerWebDraw();
 
-      webDrawTimer = setTimeout(() => {
-        if (!isIdle || !petEl) return;
-        crawlOnWeb();
-        webDrawTimer = null;
-      }, 6500);
-
-      walkTimer = null;
+      walkTimer = setTimeout(crawlOnWeb, 6500);
     }, 2000);
   } else {
     crawlOnWeb();
@@ -399,6 +453,13 @@ export function removePet() {
   if (idleTimer) clearTimeout(idleTimer);
   if (walkTimer) clearTimeout(walkTimer);
   if (webDrawTimer) clearTimeout(webDrawTimer);
+
+  if (crawlFrame !== null) {
+  cancelAnimationFrame(crawlFrame);
+  crawlFrame = null;
+}
+
+lastSilk = null;
 
   idleTimer = null;
   walkTimer = null;
