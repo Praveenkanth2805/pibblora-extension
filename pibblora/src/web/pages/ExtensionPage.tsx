@@ -6,7 +6,7 @@ const RELEASES = [
     version: 'v1.2.0',
     date: 'Latest Release',
     isLatest: true,
-    url: 'https://github.com/user-attachments/files/34241131/pibblora-extension-v1.2.0.zip', // <-- v1.2.0 ZIP லிங்க்
+    url: 'https://github.com/Praveenkanth2805/pibblora-extension/releases/download/v1.2.0/pibblora-extension-v1-2-0.zip', // <-- v1.2.0 ZIP லிங்க்
     changes: [
       '🌈 Dual Cursor Colors (Choose two colors to alternate)',
       '⚡ Super smooth cursor trails (Zero Lag)',

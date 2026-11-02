@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'; // <-- Added Link
 import { Card, Button } from '../../shared/ui';
 
 // Latest v1.2.0 ZIP Link
-const DOWNLOAD_URL = 'https://github.com/user-attachments/files/34241131/pibblora-extension-v1.2.0.zip';
+const DOWNLOAD_URL = 'https://github.com/Praveenkanth2805/pibblora-extension/releases/download/v1.2.0/pibblora-extension-v1-2-0.zip';
 
 const steps = [
   { icon: Download, text: 'Download the ZIP file.' },
