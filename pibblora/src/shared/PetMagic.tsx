@@ -75,7 +75,7 @@ function SpiderWeb({ color, phase }: { color: string; phase: number }) {
       <g
         fill="none"
         stroke={color}
-        strokeWidth="1.35"
+        strokeWidth="1.5"
         strokeOpacity="0.95"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -164,10 +164,7 @@ export default function PetMagic() {
   const idleTimer = useRef<any>(null);
 
   // Theme-based Web Color
-const isDarkTheme = settings.theme.preset === 'dark';
-const webColor = isDarkTheme
-  ? 'rgba(255,255,255,0.85)'
-  : 'rgba(75,45,65,0.78)';
+const webColor = presets[settings.theme.preset]?.primary || '#C9B6FF';
 
   useEffect(() => {
     const t = setTimeout(() => setFade(1), 100);

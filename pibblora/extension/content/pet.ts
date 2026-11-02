@@ -76,7 +76,7 @@ function createWebSVG() {
 
   group.setAttribute('fill', 'none');
   group.setAttribute('stroke', color);
-  group.setAttribute('stroke-width', '1.35');
+  group.setAttribute('stroke-width', '1.5');
   group.setAttribute('stroke-opacity', '0.95');
   group.setAttribute('stroke-linecap', 'round');
   group.setAttribute('stroke-linejoin', 'round');

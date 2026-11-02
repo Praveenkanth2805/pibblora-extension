@@ -1,3 +1,5 @@
+import { PRESET_COLORS } from './types';
+
 export function applyTheme(preset: string) {
   const map: Record<string,string> = {
     lavender: '#F5F0FF', pink: '#FFF2F8', blue: '#EFF9FF',
@@ -19,5 +21,5 @@ export function applyTheme(preset: string) {
 
 // Web color logic based on theme
 export function getWebColor(preset: string) {
-  return preset === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.5)';
+  return PRESET_COLORS[preset] || PRESET_COLORS.cream;
 }
