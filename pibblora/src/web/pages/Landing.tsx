@@ -77,7 +77,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto mt-20 max-w-6xl px-4 pb-16 space-y-6">
+      <section className="mx-auto mt-20 max-w-6xl px-4 pb-16 space-y-6 animate-fade-up">
         <ExtensionDownload />
 
         <Card className="text-center">
