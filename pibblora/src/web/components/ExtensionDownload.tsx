@@ -1,9 +1,9 @@
 import { Download, Chrome, Puzzle, Settings, CheckCircle2, History } from 'lucide-react';
-import { Link } from 'react-router-dom'; // <-- Added Link
+import { Link } from 'react-router-dom';
 import { Card, Button } from '../../shared/ui';
 
-// Latest v1.2.0 ZIP Link
-const DOWNLOAD_URL = 'https://github.com/Praveenkanth2805/pibblora-extension/releases/download/v1.2.0/pibblora-extension-v1-2-0.zip';
+// Latest v1.3.0 ZIP Link 
+const DOWNLOAD_URL = 'https://github.com/Praveenkanth2805/pibblora-extension/releases/download/v1.3.0/pibblora-extension-v1-3-0.zip';
 
 const steps = [
   { icon: Download, text: 'Download the ZIP file.' },
@@ -20,19 +20,19 @@ export function ExtensionDownload() {
       <div className="relative z-10 flex flex-col items-center text-center md:items-start md:text-left">
         
         <span className="mb-2 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold" style={{ background: 'var(--c-primary)' }}>
-          <Chrome size={12} /> Version 1.2.0 is here!
+          <Chrome size={12} /> Version 1.3.0 is here!
         </span>
         
         <h3 className="font-display text-2xl font-bold">Get Pibblora for Chrome</h3>
         <p className="mt-1 max-w-lg text-sm opacity-70">
-          Install manually via Developer Mode. Now with Dual Colors & Smooth Cursors!
+          Install manually via Developer Mode. Now with Theme Colors, Spider Webs & More!
         </p>
         
         {/* Buttons Section */}
         <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row sm:items-center">
           <a href={DOWNLOAD_URL} target="_blank" rel="noreferrer" className="shrink-0">
             <Button className="w-full sm:w-auto">
-              <Download size={18} /> Download Latest (v1.2.0)
+              <Download size={18} /> Download Latest (v1.3.0)
             </Button>
           </a>
           

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from './StoreContext';
-import { petIcons } from './theme';
+import { petIcons, presets } from './theme';
 
 const getCornerPos = (corner: string) => {
   const margin = 40;
@@ -12,6 +12,7 @@ const getCornerPos = (corner: string) => {
     case 'LB': return { x: margin, y: h - 100 - margin };
     case 'LT': return { x: margin, y: margin };
     case 'RT': return { x: w - 100 - margin, y: margin };
+    case 'CENTER': return { x: w / 2 - 32, y: h / 2 - 32 };
     default: return { x: 0, y: 0 };
   }
 };
@@ -22,10 +23,15 @@ export default function PetMagic() {
   const [isIdle, setIsIdle] = useState(false);
   const [pos, setPos] = useState(() => getCornerPos('RB'));
   const [fade, setFade] = useState(0); 
-  const [isTeleporting, setIsTeleporting] = useState(false);
+  const [isTeleporting, setIsTeleporting] = useState(false); // <-- Added missing state
+  const [webPhase, setWebPhase] = useState(0); // 0: none, 1: X, 2: O
   const currentCorner = useRef('RB');
   const walkTimer = useRef<any>(null);
   const idleTimer = useRef<any>(null);
+
+  // Theme-based Web Color
+  const isDarkTheme = settings.theme.preset === 'dark';
+  const webColor = isDarkTheme ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
 
   useEffect(() => {
     const t = setTimeout(() => setFade(1), 100);
@@ -45,14 +51,12 @@ export default function PetMagic() {
       if (walkTimer.current) clearTimeout(walkTimer.current);
       
       setFade(0); 
+      setWebPhase(0);
+      
       setTimeout(() => {
-        setIsTeleporting(true);
         currentCorner.current = 'RB';
         setPos(getCornerPos('RB'));
-        setTimeout(() => {
-          setFade(1);
-          setIsTeleporting(false);
-        }, 50);
+        setTimeout(() => setFade(1), 50);
       }, 300); 
     }
     idleTimer.current = setTimeout(() => setIsIdle(true), 30000);
@@ -74,6 +78,26 @@ export default function PetMagic() {
     if (!isIdle || !settings.pet.enabled) return;
     
     const walkSequence = () => {
+      // Spider Custom Web Logic
+      if (settings.pet.type === 'spider') {
+        if (webPhase === 0) {
+          setWebPhase(1);
+          currentCorner.current = 'CENTER';
+          setPos(getCornerPos('CENTER'));
+          walkTimer.current = setTimeout(walkSequence, 2000);
+        } else if (webPhase === 1) {
+          setWebPhase(2);
+          walkTimer.current = setTimeout(walkSequence, 5000);
+        } else {
+          const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
+          const next = corners[Math.floor(Math.random() * corners.length)];
+          currentCorner.current = next;
+          setPos(getCornerPos(next));
+          walkTimer.current = setTimeout(walkSequence, 6000);
+        }
+        return;
+      }
+
       const duration = settings.pet.type === 'spiderman' ? 7000 : settings.pet.type === 'snail' ? 35000 : 10000;
 
       if (settings.pet.type === 'spiderman') {
@@ -89,17 +113,17 @@ export default function PetMagic() {
       }
 
       const roll = Math.random();
-      const action = roll < 0.4 ? 'reverse' : roll < 0.7 ? 'teleport' : 'forward';
+      const action = settings.pet.type === 'snail' 
+        ? (roll < 0.5 ? 'reverse' : 'forward')
+        : (roll < 0.4 ? 'reverse' : roll < 0.7 ? 'teleport' : 'forward');
       
       if (action === 'teleport') {
         setFade(0); 
-        setIsTeleporting(true);
         walkTimer.current = setTimeout(() => {
           const corners = ['RB', 'LB', 'LT', 'RT'];
           currentCorner.current = corners[Math.floor(Math.random() * corners.length)];
           setPos(getCornerPos(currentCorner.current));
           setFade(1);
-          setIsTeleporting(false);
           walkTimer.current = setTimeout(walkSequence, duration);
         }, 300);
       } else {
@@ -115,16 +139,73 @@ export default function PetMagic() {
     };
     walkTimer.current = setTimeout(walkSequence, 10000);
     return () => { if (walkTimer.current) clearTimeout(walkTimer.current); };
-  }, [isIdle, settings.pet.enabled, settings.pet.type]);
+  }, [isIdle, settings.pet.enabled, settings.pet.type, webPhase]);
 
   const animate = settings.pet.animation === 'bounce' ? { y: [0, -20, 0] } :
                   settings.pet.animation === 'float'  ? { y: [0, -10, 0], rotate: [-5, 5, -5] } :
                                                         { rotate: [-15, 15, -15] };
   const iconSrc = settings.pet.customImage ? settings.pet.customImage : petIcons[settings.pet.type]?.src;
-  const walkDuration = settings.pet.type === 'snail' ? 35 : settings.pet.type === 'spider' ? 5 : settings.pet.type === 'spiderman' ? 7 : 10;
+  const walkDuration = settings.pet.type === 'snail' ? 35 : settings.pet.type === 'spiderman' ? 7 : 10;
 
   return (
     <div style={{ position: 'fixed', left: 0, top: 0, pointerEvents: 'none', zIndex: 50 }}>
+      
+      {/* Spider Web (Theme Aware & X -> O Sequence) */}
+      {settings.pet.type === 'spider' && (
+        <svg style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', zIndex: 49, pointerEvents: 'none' }}>
+          <g stroke={webColor} strokeWidth="1.5" fill="none">
+            {/* Phase 1: X (Diagonals) */}
+            <motion.line 
+              x1="50%" y1="50%" x2="0%" y2="0%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 2 }} 
+            />
+            <motion.line 
+              x1="50%" y1="50%" x2="100%" y2="0%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 2 }} 
+            />
+            <motion.line 
+              x1="50%" y1="50%" x2="100%" y2="100%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 2 }} 
+            />
+            <motion.line 
+              x1="50%" y1="50%" x2="0%" y2="100%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 2 }} 
+            />
+            {/* Phase 1: + (Cardinals) */}
+            <motion.line 
+              x1="50%" y1="50%" x2="50%" y2="0%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 3.5 }} 
+            />
+            <motion.line 
+              x1="50%" y1="50%" x2="100%" y2="50%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 3.5 }} 
+            />
+            <motion.line 
+              x1="50%" y1="50%" x2="50%" y2="100%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 3.5 }} 
+            />
+            <motion.line 
+              x1="50%" y1="50%" x2="0%" y2="50%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 3.5 }} 
+            />
+
+            {/* Phase 2: O (Concentric Rings) */}
+            <motion.polygon 
+              points="50%,40% 57%,43% 60%,50% 57%,57% 50%,60% 43%,57% 40%,50% 43%,43%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 2 ? 1 : 0 }} transition={{ duration: 2, delay: 0 }} 
+            />
+            <motion.polygon 
+              points="50%,25% 68%,32% 75%,50% 68%,68% 50%,75% 32%,68% 25%,50% 32%,32%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 2 ? 1 : 0 }} transition={{ duration: 2, delay: 1.5 }} 
+            />
+            <motion.polygon 
+              points="50%,10% 80%,20% 90%,50% 80%,80% 50%,90% 20%,80% 10%,50% 20%,20%" 
+              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 2 ? 1 : 0 }} transition={{ duration: 2, delay: 3 }} 
+            />
+          </g>
+        </svg>
+      )}
+
       <motion.div
         animate={{ x: pos.x, y: pos.y, opacity: fade }}
         transition={{ 

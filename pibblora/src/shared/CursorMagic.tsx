@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useStore } from './StoreContext';
-import { cursorEmoji } from './theme';
+import { cursorEmoji, presets } from './theme';
 
 export function CursorMagic() {
   const { settings } = useStore();
@@ -8,9 +8,12 @@ export function CursorMagic() {
   useEffect(() => {
     if (!settings.cursor.enabled) return;
 
+    // Get Active Theme Color
+    const activeTheme = presets[settings.theme.preset] || presets.cream;
+    const themePrimaryColor = activeTheme.primary;
+
     let mainCursorEl: HTMLDivElement | null = null;
     let styleEl: HTMLStyleElement | null = null;
-    let dualCounter = 0;
 
     if (settings.cursor.customCursor) {
       styleEl = document.createElement('style');
@@ -21,7 +24,8 @@ export function CursorMagic() {
       Object.assign(mainCursorEl.style, {
         position: 'fixed', left: '0', top: '0', pointerEvents: 'none', zIndex: '999999',
         transform: 'translate3d(0,0,0) translate(-50%, -50%)', borderRadius: '50%',
-        background: settings.cursor.color.startsWith('#') ? settings.cursor.color : '#C9B6FF',
+        // Theme Override for main cursor if style is trail
+        background: settings.cursor.style === 'trail' ? themePrimaryColor : (settings.cursor.color.startsWith('#') ? settings.cursor.color : '#C9B6FF'),
         width: `${settings.cursor.size * 0.6}px`, height: `${settings.cursor.size * 0.6}px`,
         transition: 'width 0.2s, height 0.2s',
         willChange: 'transform'
@@ -72,8 +76,9 @@ export function CursorMagic() {
         const x = lastX + (dx * i) / steps;
         const y = lastY + (dy * i) / steps;
 
-        const startColor = settings.cursor.color;
-        const endColor = settings.cursor.dualColor ? settings.cursor.color2 : settings.cursor.color;
+        // Theme Override Logic
+        const startColor = settings.cursor.style === 'trail' ? themePrimaryColor : settings.cursor.color;
+        const endColor = settings.cursor.dualColor ? settings.cursor.color2 : startColor;
 
         const dot = document.createElement('div');
         
@@ -87,13 +92,13 @@ export function CursorMagic() {
         } else if (settings.cursor.style === 'trail') {
           extraStyles = {
             width: `${settings.cursor.size * 0.4}px`, height: `${settings.cursor.size * 0.4}px`,
-            borderRadius: '50%', background: startColor.includes('gradient') ? '#C9B6FF' : startColor
+            borderRadius: '50%', background: startColor
           };
         } else {
           dot.textContent = cursorEmoji[settings.cursor.style] || '✨';
           extraStyles = {
             fontSize: `${settings.cursor.size}px`, 
-            color: startColor.includes('gradient') ? '#C9B6FF' : startColor
+            color: startColor
           };
         }
 
@@ -118,9 +123,9 @@ export function CursorMagic() {
               dot.style.background = endColor;
               dot.style.boxShadow = `0 0 15px ${endColor}, 0 0 30px ${endColor}`;
             } else if (settings.cursor.style === 'trail') {
-              dot.style.background = endColor.includes('gradient') ? '#C9B6FF' : endColor;
+              dot.style.background = endColor;
             } else {
-              dot.style.color = endColor.includes('gradient') ? '#C9B6FF' : endColor;
+              dot.style.color = endColor;
             }
           }
         });
@@ -140,7 +145,7 @@ export function CursorMagic() {
       if (mainCursorEl) mainCursorEl.remove();
       if (styleEl) styleEl.remove();
     };
-  }, [settings.cursor]);
+  }, [settings.cursor, settings.theme.preset]);
 
-  return null; // Renders nothing, just handles DOM events
+  return null;
 }

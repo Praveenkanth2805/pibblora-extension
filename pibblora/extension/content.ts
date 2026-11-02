@@ -10,6 +10,11 @@ const DEFAULTS: Settings = {
   cursor: { enabled: false, style: 'stars', color: '#FFC9DE', dualColor: false, color2: '#C9B6FF', size: 18, customCursor: false },
 };
 
+const PRESET_COLORS: Record<string, string> = {
+  lavender: '#C9B6FF', pink: '#FFC9DE', blue: '#BDE7FF',
+  mint: '#C6F4DC', cream: '#C9B6FF', dark: '#8B6FE0', devotional: '#E67E22'
+};
+
 // Locally hosted image for Spiderman
 const SPIDERMAN_IMG = chrome.runtime.getURL('spider.png');
 
@@ -29,11 +34,13 @@ const KEY = 'pibblora:settings';
 
 let petEl: HTMLElement | null = null;
 let styleEl: HTMLStyleElement | null = null;
+let webSvg: SVGSVGElement | null = null; // <-- Added missing variable
 let cleanupFns: (() => void)[] = [];
 let isIdle = false;
 let idleTimer: any;
 let walkTimer: any;
 let currentCorner = 'RB';
+let currentThemePreset = 'cream'; // <-- Added for theme color
 
 function getCornerPos(corner: string) {
   const margin = 40;
@@ -44,8 +51,62 @@ function getCornerPos(corner: string) {
     case 'LB': return { x: margin, y: h - 100 - margin };
     case 'LT': return { x: margin, y: margin };
     case 'RT': return { x: w - 100 - margin, y: margin };
+    case 'CENTER': return { x: w / 2 - 32, y: h / 2 - 32 };
     default: return { x: 0, y: 0 };
   }
+}
+
+// <-- Added missing function
+function createWebSVG() {
+  if (webSvg) webSvg.remove();
+  const svgNS = "http://www.w3.org/2000/svg";
+  webSvg = document.createElementNS(svgNS, "svg");
+  webSvg.setAttribute('style', 'position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 2147483640;');
+  
+  const isDark = currentThemePreset === 'dark';
+  const color = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
+  
+  let svgContent = `<g stroke="${color}" stroke-width="1.5" fill="none">`;
+  
+  // Phase 1: X (Diagonals)
+  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="0%" y2="0%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
+  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="100%" y2="0%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
+  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="100%" y2="100%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
+  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="0%" y2="100%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
+  
+  // Phase 1: + (Cardinals)
+  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="50%" y2="0%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
+  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="100%" y2="50%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
+  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="50%" y2="100%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
+  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="0%" y2="50%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
+
+  // Phase 2: O (Rings)
+  const rings = [
+    "50%,40% 57%,43% 60%,50% 57%,57% 50%,60% 43%,57% 40%,50% 43%,43%",
+    "50%,25% 68%,32% 75%,50% 68%,68% 50%,75% 32%,68% 25%,50% 32%,32%",
+    "50%,10% 80%,20% 90%,50% 80%,80% 50%,90% 20%,80% 10%,50% 20%,20%"
+  ];
+  rings.forEach((ring) => {
+    svgContent += `<polygon class="web-ring" points="${ring}" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 2s ease-in-out;" />`;
+  });
+
+  svgContent += `</g>`;
+  webSvg.innerHTML = svgContent;
+  document.body.appendChild(webSvg);
+}
+
+function triggerWebDraw() {
+  if (!webSvg) return;
+  const lines = webSvg.querySelectorAll('.web-line');
+  const rings = webSvg.querySelectorAll('.web-ring');
+  
+  lines.forEach((el: any, i) => {
+    setTimeout(() => { el.style.strokeDashoffset = '0'; }, i * 200);
+  });
+
+  rings.forEach((el: any, i) => {
+    setTimeout(() => { el.style.strokeDashoffset = '0'; }, 2000 + (i * 1500));
+  });
 }
 
 function injectStyle() {
@@ -84,6 +145,8 @@ function resetIdle() {
     isIdle = false;
     if (walkTimer) clearTimeout(walkTimer);
     
+    if (webSvg) webSvg.innerHTML = ''; // Clear webs
+
     if (petEl) {
       petEl.style.opacity = '0'; 
       setTimeout(() => {
@@ -106,8 +169,46 @@ function resetIdle() {
 function walkSequence() {
   if (!isIdle || !petEl) return;
   const petType = (petEl as any).dataset.type || 'cat';
-  
-  const walkDuration = petType === 'snail' ? 35 : petType === 'spider' ? 5 : 10;
+  const isSnail = petType === 'snail';
+  const isSpider = petType === 'spider';
+
+  let walkDuration = 10;
+  if (petType === 'snail') walkDuration = 35;
+  else if (petType === 'spiderman') walkDuration = 7;
+
+  // Spider Custom Web Logic
+  if (isSpider) {
+    if (!webSvg) {
+      createWebSVG();
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      
+      petEl.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
+      petEl.style.left = `${w/2 - 32}px`;
+      petEl.style.top = `${h/2 - 32}px`;
+      currentCorner = 'CENTER';
+      
+      setTimeout(() => {
+        triggerWebDraw();
+      }, 2000);
+
+      walkTimer = setTimeout(walkSequence, 12000);
+    } else {
+      const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
+      const next = corners[Math.floor(Math.random() * corners.length)];
+      
+      petEl.style.transition = 'left 3s ease-in-out, top 3s ease-in-out';
+      if (next === 'CENTER') {
+        petEl.style.left = `${window.innerWidth/2 - 32}px`;
+        petEl.style.top = `${window.innerHeight/2 - 32}px`;
+      } else {
+        setPetPos(next);
+      }
+      currentCorner = next;
+      walkTimer = setTimeout(walkSequence, 5000);
+    }
+    return;
+  }
 
   if (petType === 'spiderman') {
     const roll = Math.random();
@@ -152,7 +253,9 @@ function walkSequence() {
   petEl.style.transition = `left ${walkDuration}s linear, top ${walkDuration}s linear, opacity 0.3s ease`;
 
   const roll = Math.random();
-  const action = roll < 0.4 ? 'reverse' : roll < 0.7 ? 'teleport' : 'forward';
+  const action = isSnail 
+    ? (roll < 0.5 ? 'reverse' : 'forward')
+    : (roll < 0.4 ? 'reverse' : roll < 0.7 ? 'teleport' : 'forward');
 
   if (action === 'teleport') {
     petEl.style.opacity = '0';
@@ -177,6 +280,9 @@ function walkSequence() {
 function mountPet(s: Settings) {
   removePet();
   if (!s.pet.enabled) return;
+  
+  if (s.pet.type === 'spider') createWebSVG();
+
   petEl = document.createElement('div');
   petEl.className = 'pibblora-pet-container';
   (petEl as any).dataset.type = s.pet.type;
@@ -216,6 +322,7 @@ function removePet() {
   cleanupFns = [];
   petEl?.remove(); 
   petEl = null; 
+  if (webSvg) { webSvg.remove(); webSvg = null; }
 }
 
 function mountCursor(s: Settings) {
@@ -227,7 +334,9 @@ function mountCursor(s: Settings) {
 
   let mainCursorEl: HTMLDivElement | null = null;
   let styleEl = document.getElementById('pibblora-hide-cursor');
-  let dualCounter = 0;
+  
+  // Missing activeThemePrimary added here
+  const activeThemePrimary = PRESET_COLORS[s.theme.preset] || PRESET_COLORS.cream;
 
   if (s.cursor.customCursor) {
     if (!styleEl) {
@@ -241,7 +350,7 @@ function mountCursor(s: Settings) {
     Object.assign(mainCursorEl.style, {
       position: 'fixed', left: '0', top: '0', pointerEvents: 'none', zIndex: '2147483647',
       transform: 'translate3d(0,0,0) translate(-50%, -50%)', borderRadius: '50%',
-      background: s.cursor.color.startsWith('#') ? s.cursor.color : '#C9B6FF',
+      background: s.cursor.style === 'trail' ? activeThemePrimary : (s.cursor.color.startsWith('#') ? s.cursor.color : '#C9B6FF'),
       width: `${s.cursor.size * 0.6}px`, height: `${s.cursor.size * 0.6}px`,
       transition: 'width 0.2s, height 0.2s',
       willChange: 'transform'
@@ -295,8 +404,8 @@ function mountCursor(s: Settings) {
       const x = lastX + (dx * i) / steps;
       const y = lastY + (dy * i) / steps;
 
-      const startColor = s.cursor.color;
-      const endColor = s.cursor.dualColor ? s.cursor.color2 : s.cursor.color;
+      const startColor = s.cursor.style === 'trail' ? activeThemePrimary : s.cursor.color;
+      const endColor = s.cursor.dualColor ? s.cursor.color2 : startColor;
 
       const dot = document.createElement('div');
       
@@ -386,6 +495,7 @@ function applyTheme(preset: string) {
 }
 
 function apply(s: Settings) {
+  currentThemePreset = s.theme.preset; // <-- Added this line
   injectStyle();
   mountPet(s);
   mountCursor(s);
