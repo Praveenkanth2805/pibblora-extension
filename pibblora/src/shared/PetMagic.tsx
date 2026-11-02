@@ -39,23 +39,47 @@ function SpiderWeb({ color, phase }: { color: string; phase: number }) {
   const { width, height } = size;
   const cx = width / 2;
   const cy = height / 2;
-  const spokes = 24;
-  const rings = 12;
+
+  const spokes = 20;
+  const rings = 10;
+  const radiusX = width * 0.42;
+  const radiusY = height * 0.40;
 
   const boundary = Array.from({ length: spokes }, (_, i) => {
     const angle = (i / spokes) * Math.PI * 2;
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
-
-    const scale = Math.min(
-      (width / 2) / Math.max(Math.abs(dx), 0.0001),
-      (height / 2) / Math.max(Math.abs(dy), 0.0001)
-    );
+    const variation = 1 + Math.sin(i * 2.17) * 0.018;
 
     return {
-      x: cx + dx * scale,
-      y: cy + dy * scale,
+      x: cx + Math.cos(angle) * radiusX * variation,
+      y: cy + Math.sin(angle) * radiusY * variation,
     };
+  });
+
+  const ringPaths = Array.from({ length: rings }, (_, i) => {
+    const progress = 0.12 + (i / rings) * 0.88;
+
+    const points = boundary.map((point, j) => {
+      const variation = 1 + Math.sin(j * 1.8 + i * 0.65) * 0.012;
+      const scale = progress * variation;
+
+      return {
+        x: cx + (point.x - cx) * scale,
+        y: cy + (point.y - cy) * scale,
+      };
+    });
+
+    let d = '';
+
+    points.forEach((point, j) => {
+      const next = points[(j + 1) % spokes];
+      const midX = (point.x + next.x) / 2;
+      const midY = (point.y + next.y) / 2;
+
+      if (j === 0) d += `M ${midX} ${midY} `;
+      d += `Q ${point.x} ${point.y} ${midX} ${midY} `;
+    });
+
+    return `${d}Z`;
   });
 
   return (
@@ -75,12 +99,13 @@ function SpiderWeb({ color, phase }: { color: string; phase: number }) {
       <g
         fill="none"
         stroke={color}
-        strokeWidth="1.5"
-        strokeOpacity="0.95"
+        strokeWidth="1.25"
+        strokeOpacity="0.9"
         strokeLinecap="round"
         strokeLinejoin="round"
-        style={{ filter: `drop-shadow(0 0 3px ${color})` }}
+        style={{ filter: `drop-shadow(0 0 2px ${color})` }}
       >
+        {/* Radial support threads */}
         {boundary.map((point, i) => (
           <motion.line
             key={`silk-${i}`}
@@ -98,59 +123,45 @@ function SpiderWeb({ color, phase }: { color: string; phase: number }) {
           />
         ))}
 
-        {Array.from({ length: rings }, (_, i) => {
-          const progress = (i + 1) / rings;
+        {/* Curved connecting threads */}
+        {ringPaths.map((d, i) => (
+          <motion.path
+            key={`spiral-${i}`}
+            d={d}
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{
+              pathLength: phase >= 2 ? 1 : 0,
+              opacity: phase >= 2 ? 1 : 0,
+            }}
+            transition={{
+              pathLength: {
+                duration: 1.2,
+                delay: 1.8 + i * 0.35,
+                ease: 'easeInOut',
+              },
+              opacity: { duration: 0.2 },
+            }}
+          />
+        ))}
 
-          const points = boundary.map((point, j) => {
-            const irregularity =
-              1 + 0.012 * Math.sin(j * 2.3 + i);
-
-            const t = progress * irregularity;
-
-            return {
-              x: cx + (point.x - cx) * t,
-              y: cy + (point.y - cy) * t,
-            };
-          });
-
-          let d = '';
-
-          points.forEach((point, j) => {
-            const next = points[(j + 1) % spokes];
-            const mx = (point.x + next.x) / 2;
-            const my = (point.y + next.y) / 2;
-
-            d += `${j === 0 ? `M ${mx} ${my}` : ''} Q ${point.x} ${point.y} ${mx} ${my} `;
-          });
-
-          d += 'Z';
-
-          return (
-            <motion.path
-              key={`spiral-${i}`}
-              d={d}
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{
-                pathLength: phase >= 2 ? 1 : 0,
-                opacity: phase >= 2 ? 1 : 0,
-              }}
-              transition={{
-                pathLength: {
-                  duration: 1.2,
-                  delay: 1.8 + i * 0.35,
-                  ease: 'easeInOut',
-                },
-                opacity: { duration: 0.2 },
-              }}
-            />
-          );
-        })}
+        {/* Central hub */}
+        <motion.circle
+          cx={cx}
+          cy={cy}
+          r="3"
+          fill={color}
+          stroke="none"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{
+            opacity: phase >= 1 ? 0.9 : 0,
+            scale: phase >= 1 ? 1 : 0,
+          }}
+          transition={{ duration: 0.3 }}
+        />
       </g>
     </svg>
   );
 }
-
-
 export default function PetMagic() {
   const { settings } = useStore();
   
@@ -194,18 +205,6 @@ const webColor = presets[settings.theme.preset]?.primary || '#C9B6FF';
     }
     idleTimer.current = setTimeout(() => setIsIdle(true), 30000);
   }, [isIdle]);
-
-useEffect(() => {
-  if (!isIdle || !settings.pet.enabled || settings.pet.type !== 'spider') return;
-
-  const firstTimer = setTimeout(() => {
-    currentCorner.current = 'CENTER';
-    setPos(getCornerPos('CENTER'));
-    setWebPhase(1);
-  }, 10000);
-
-  return () => clearTimeout(firstTimer);
-}, [isIdle, settings.pet.enabled, settings.pet.type]);
 
 
 useEffect(() => {

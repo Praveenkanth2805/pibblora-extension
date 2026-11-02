@@ -50,8 +50,11 @@ function createWebSVG() {
   const height = window.innerHeight;
   const cx = width / 2;
   const cy = height / 2;
-  const spokes = 24;
-  const rings = 12;
+
+  const spokes = 20;
+  const rings = 10;
+  const radiusX = width * 0.42;
+  const radiusY = height * 0.40;
 
   webSvg = document.createElementNS(svgNS, 'svg');
   webSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
@@ -74,52 +77,44 @@ function createWebSVG() {
   group.setAttribute('fill', 'none');
   group.setAttribute('stroke', color);
   group.setAttribute('opacity', '0');
-  group.setAttribute('stroke-width', '1.5');
-  group.setAttribute('stroke-opacity', '0.95');
+  group.setAttribute('stroke-width', '1.25');
+  group.setAttribute('stroke-opacity', '0.9');
   group.setAttribute('stroke-linecap', 'round');
   group.setAttribute('stroke-linejoin', 'round');
-  group.style.filter = `drop-shadow(0 0 3px ${color})`;
+  group.style.filter = `drop-shadow(0 0 2px ${color})`;
 
-  // Find 24 points around the complete viewport boundary.
   const boundary = Array.from({ length: spokes }, (_, i) => {
     const angle = (i / spokes) * Math.PI * 2;
-    const dx = Math.cos(angle);
-    const dy = Math.sin(angle);
-
-    const scale = Math.min(
-      (width / 2) / Math.max(Math.abs(dx), 0.0001),
-      (height / 2) / Math.max(Math.abs(dy), 0.0001)
-    );
+    const variation = 1 + Math.sin(i * 2.17) * 0.018;
 
     return {
-      x: cx + dx * scale,
-      y: cy + dy * scale,
+      x: cx + Math.cos(angle) * radiusX * variation,
+      y: cy + Math.sin(angle) * radiusY * variation,
     };
   });
 
-  // Radial support silk threads.
-  boundary.forEach((point, i) => {
+  // Radial support threads
+  boundary.forEach(point => {
     const line = document.createElementNS(svgNS, 'line');
-
     line.setAttribute('x1', String(cx));
     line.setAttribute('y1', String(cy));
     line.setAttribute('x2', String(point.x));
     line.setAttribute('y2', String(point.y));
     line.setAttribute('class', 'web-silk');
-
     group.appendChild(line);
   });
 
-  // Curved connecting spiral silk threads.
+  // Curved spiral connecting threads
   for (let i = 0; i < rings; i++) {
-    const progress = (i + 1) / rings;
+    const progress = 0.12 + (i / rings) * 0.88;
+
     const points = boundary.map((point, j) => {
-      const irregularity = 1 + 0.012 * Math.sin(j * 2.3 + i);
-      const t = progress * irregularity;
+      const variation = 1 + Math.sin(j * 1.8 + i * 0.65) * 0.012;
+      const scale = progress * variation;
 
       return {
-        x: cx + (point.x - cx) * t,
-        y: cy + (point.y - cy) * t,
+        x: cx + (point.x - cx) * scale,
+        y: cy + (point.y - cy) * scale,
       };
     });
 
@@ -127,10 +122,12 @@ function createWebSVG() {
 
     points.forEach((point, j) => {
       const next = points[(j + 1) % spokes];
-      const mx = (point.x + next.x) / 2;
-      const my = (point.y + next.y) / 2;
+      const midX = (point.x + next.x) / 2;
+      const midY = (point.y + next.y) / 2;
 
-      d += `${j === 0 ? `M ${mx} ${my}` : ''} Q ${point.x} ${point.y} ${mx} ${my} `;
+      if (j === 0) d += `M ${midX} ${midY} `;
+
+      d += `Q ${point.x} ${point.y} ${midX} ${midY} `;
     });
 
     d += 'Z';
@@ -138,16 +135,23 @@ function createWebSVG() {
     const path = document.createElementNS(svgNS, 'path');
     path.setAttribute('d', d);
     path.setAttribute('class', 'web-silk');
-
     group.appendChild(path);
   }
 
+  // Small central hub
+  const hub = document.createElementNS(svgNS, 'circle');
+  hub.setAttribute('cx', String(cx));
+  hub.setAttribute('cy', String(cy));
+  hub.setAttribute('r', '3');
+  hub.setAttribute('fill', color);
+  hub.setAttribute('stroke', 'none');
+  hub.setAttribute('class', 'web-hub');
+  group.appendChild(hub);
+
   webSvg.appendChild(group);
   document.body.appendChild(webSvg);
-
   webDrawn = false;
 }
-
 function triggerWebDraw() {
   if (!webSvg || webDrawn) return;
 
