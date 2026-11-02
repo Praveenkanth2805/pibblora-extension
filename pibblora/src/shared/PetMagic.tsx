@@ -40,10 +40,10 @@ function SpiderWeb({ color, phase }: { color: string; phase: number }) {
   const cx = width / 2;
   const cy = height / 2;
 
-  const spokes = 20;
-  const rings = 10;
-  const radiusX = width * 0.42;
-  const radiusY = height * 0.40;
+const spokes = 28;
+const rings = 10;
+const radiusX = width * 0.49;
+const radiusY = height * 0.47;
 
   const boundary = Array.from({ length: spokes }, (_, i) => {
     const angle = (i / spokes) * Math.PI * 2;

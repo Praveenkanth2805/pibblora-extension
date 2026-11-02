@@ -51,10 +51,10 @@ function createWebSVG() {
   const cx = width / 2;
   const cy = height / 2;
 
-  const spokes = 20;
-  const rings = 10;
-  const radiusX = width * 0.42;
-  const radiusY = height * 0.40;
+const spokes = 28;
+const rings = 10;
+const radiusX = width * 0.49;
+const radiusY = height * 0.47;
 
   webSvg = document.createElementNS(svgNS, 'svg');
   webSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
@@ -161,7 +161,7 @@ function triggerWebDraw() {
     webSvg.querySelectorAll<SVGLineElement | SVGPathElement>('.web-silk')
   );
 
-  const spokeCount = 24;
+  const spokeCount = 28;
 
   elements.forEach((el, i) => {
     const length = el.getTotalLength();
@@ -244,37 +244,91 @@ function resetIdle(cleanupFns: (() => void)[]) {
   }, 30000);
 }
 
+function crawlOnWeb() {
+  if (!petEl || !webSvg || !isIdle) return;
+
+  const paths = Array.from(
+    webSvg.querySelectorAll<SVGLineElement | SVGPathElement>('.web-silk')
+  );
+
+  if (!paths.length) return;
+
+  const path = paths[Math.floor(Math.random() * paths.length)];
+  const length = path.getTotalLength();
+  const reverse = Math.random() > 0.5;
+
+  const start = reverse ? length : 0;
+  const end = reverse ? 0 : length;
+  const duration = 3500 + Math.random() * 2500;
+
+  const startPoint = path.getPointAtLength(start);
+  const endPoint = path.getPointAtLength(end);
+
+  petEl.style.transition = 'none';
+  petEl.style.left = `${startPoint.x - 32}px`;
+  petEl.style.top = `${startPoint.y - 32}px`;
+
+  void petEl.offsetWidth;
+
+  const animation = petEl.animate(
+    [
+      {
+        left: `${startPoint.x - 32}px`,
+        top: `${startPoint.y - 32}px`,
+      },
+      {
+        left: `${endPoint.x - 32}px`,
+        top: `${endPoint.y - 32}px`,
+      },
+    ],
+    {
+      duration,
+      easing: 'linear',
+      fill: 'forwards',
+    }
+  );
+
+  webAnimations.push(animation);
+
+  animation.onfinish = () => {
+    if (!isIdle || !petEl) return;
+
+    animation.cancel();
+    webAnimations = webAnimations.filter(item => item !== animation);
+
+    walkTimer = setTimeout(crawlOnWeb, 700);
+  };
+}
+
 function walkSequence() {
   if (!isIdle || !petEl) return;
   const petType = (petEl as any).dataset.type || 'cat';
   
 if (petType === 'spider') {
-if (!webSvg) {
-  petEl.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
+  if (!webSvg) {
+    petEl.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
 
-  const center = getCornerPos('CENTER');
-  petEl.style.left = `${center.x}px`;
-  petEl.style.top = `${center.y}px`;
-  currentCorner = 'CENTER';
+    const center = getCornerPos('CENTER');
+    petEl.style.left = `${center.x}px`;
+    petEl.style.top = `${center.y}px`;
+    currentCorner = 'CENTER';
 
-  webDrawTimer = setTimeout(() => {
-    if (!isIdle || !petEl) return;
+    walkTimer = setTimeout(() => {
+      if (!isIdle || !petEl) return;
 
-    createWebSVG();
-    triggerWebDraw();
-    webDrawTimer = null;
-  }, 2000);
+      createWebSVG();
+      triggerWebDraw();
 
-    walkTimer = setTimeout(walkSequence, 12000);
+      webDrawTimer = setTimeout(() => {
+        if (!isIdle || !petEl) return;
+        crawlOnWeb();
+        webDrawTimer = null;
+      }, 6500);
+
+      walkTimer = null;
+    }, 2000);
   } else {
-    const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
-    const next = corners[Math.floor(Math.random() * corners.length)];
-
-    petEl.style.transition = 'left 3s ease-in-out, top 3s ease-in-out';
-    setPetPos(next);
-    currentCorner = next;
-
-    walkTimer = setTimeout(walkSequence, 6000);
+    crawlOnWeb();
   }
 
   return;
