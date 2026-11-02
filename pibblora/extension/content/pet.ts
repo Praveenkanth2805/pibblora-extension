@@ -4,12 +4,27 @@ import { getWebColor } from './theme';
 let petEl: HTMLElement | null = null;
 let webSvg: SVGSVGElement | null = null;
 let isIdle = false;
-let idleTimer: any;
-let walkTimer: any;
+let webDrawn = false;
+let webAnimations: Animation[] = [];
+let idleTimer: ReturnType<typeof setTimeout> | null = null;
+let walkTimer: ReturnType<typeof setTimeout> | null = null;
+let webDrawTimer: ReturnType<typeof setTimeout> | null = null;
 let currentCorner = 'RB';
 let currentTheme = 'cream';
 
-export function setTheme(preset: string) { currentTheme = preset; }
+export function setTheme(preset: string) {
+  currentTheme = preset;
+
+  if (webSvg) {
+    const group = webSvg.querySelector('g');
+    const color = getWebColor(currentTheme);
+
+    if (group) {
+      group.setAttribute('stroke', color);
+      group.style.filter = `drop-shadow(0 0 3px ${color})`;
+    }
+  }
+}
 
 function getCornerPos(corner: string) {
   const margin = 40;
@@ -25,52 +40,155 @@ function getCornerPos(corner: string) {
   }
 }
 
+
+
 function createWebSVG() {
   if (webSvg) webSvg.remove();
-  const svgNS = "http://www.w3.org/2000/svg";
-  webSvg = document.createElementNS(svgNS, "svg");
-  webSvg.setAttribute('style', 'position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 2147483640;');
-  
-  const color = getWebColor(currentTheme);
-  
-  let svgContent = `<g stroke="${color}" stroke-width="1.5" fill="none">`;
-  
-  // X Lines
-  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="0%" y2="0%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
-  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="100%" y2="0%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
-  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="100%" y2="100%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
-  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="0%" y2="100%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
-  
-  // + Lines
-  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="50%" y2="0%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
-  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="100%" y2="50%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
-  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="50%" y2="100%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
-  svgContent += `<line class="web-line" x1="50%" y1="50%" x2="0%" y2="50%" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 1.5s ease-in-out;" />`;
 
-  // O Rings
-  const rings = [
-    "50%,40% 57%,43% 60%,50% 57%,57% 50%,60% 43%,57% 40%,50% 43%,43%",
-    "50%,25% 68%,32% 75%,50% 68%,68% 50%,75% 32%,68% 25%,50% 32%,32%",
-    "50%,10% 80%,20% 90%,50% 80%,80% 50%,90% 20%,80% 10%,50% 20%,20%"
-  ];
-  rings.forEach((ring) => {
-    svgContent += `<polygon class="web-ring" points="${ring}" style="stroke-dasharray: 2000; stroke-dashoffset: 2000; transition: stroke-dashoffset 2s ease-in-out;" />`;
+  webAnimations.forEach(animation => animation.cancel());
+  webAnimations = [];
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const cx = width / 2;
+  const cy = height / 2;
+  const spokes = 24;
+  const rings = 12;
+
+  webSvg = document.createElementNS(svgNS, 'svg');
+  webSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  webSvg.setAttribute('preserveAspectRatio', 'none');
+
+  Object.assign(webSvg.style, {
+    position: 'fixed',
+    inset: '0',
+    width: '100vw',
+    height: '100vh',
+    pointerEvents: 'none',
+    zIndex: '2147483638',
+    overflow: 'hidden',
+    opacity: '1',
   });
 
-  svgContent += `</g>`;
-  webSvg.innerHTML = svgContent;
+  const group = document.createElementNS(svgNS, 'g');
+  const color = getWebColor(currentTheme);
+
+  group.setAttribute('fill', 'none');
+  group.setAttribute('stroke', color);
+  group.setAttribute('stroke-width', '1.35');
+  group.setAttribute('stroke-opacity', '0.95');
+  group.setAttribute('stroke-linecap', 'round');
+  group.setAttribute('stroke-linejoin', 'round');
+  group.style.filter = `drop-shadow(0 0 3px ${color})`;
+
+  // Find 24 points around the complete viewport boundary.
+  const boundary = Array.from({ length: spokes }, (_, i) => {
+    const angle = (i / spokes) * Math.PI * 2;
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+
+    const scale = Math.min(
+      (width / 2) / Math.max(Math.abs(dx), 0.0001),
+      (height / 2) / Math.max(Math.abs(dy), 0.0001)
+    );
+
+    return {
+      x: cx + dx * scale,
+      y: cy + dy * scale,
+    };
+  });
+
+  // Radial support silk threads.
+  boundary.forEach((point, i) => {
+    const line = document.createElementNS(svgNS, 'line');
+
+    line.setAttribute('x1', String(cx));
+    line.setAttribute('y1', String(cy));
+    line.setAttribute('x2', String(point.x));
+    line.setAttribute('y2', String(point.y));
+    line.setAttribute('class', 'web-silk');
+
+    group.appendChild(line);
+  });
+
+  // Curved connecting spiral silk threads.
+  for (let i = 0; i < rings; i++) {
+    const progress = (i + 1) / rings;
+    const points = boundary.map((point, j) => {
+      const irregularity = 1 + 0.012 * Math.sin(j * 2.3 + i);
+      const t = progress * irregularity;
+
+      return {
+        x: cx + (point.x - cx) * t,
+        y: cy + (point.y - cy) * t,
+      };
+    });
+
+    let d = '';
+
+    points.forEach((point, j) => {
+      const next = points[(j + 1) % spokes];
+      const mx = (point.x + next.x) / 2;
+      const my = (point.y + next.y) / 2;
+
+      d += `${j === 0 ? `M ${mx} ${my}` : ''} Q ${point.x} ${point.y} ${mx} ${my} `;
+    });
+
+    d += 'Z';
+
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'web-silk');
+
+    group.appendChild(path);
+  }
+
+  webSvg.appendChild(group);
   document.body.appendChild(webSvg);
+
+  webDrawn = false;
 }
 
 function triggerWebDraw() {
-  if (!webSvg) return;
-  webSvg.querySelectorAll('.web-line').forEach((el: any, i) => {
-    setTimeout(() => { el.style.strokeDashoffset = '0'; }, i * 200);
-  });
-  webSvg.querySelectorAll('.web-ring').forEach((el: any, i) => {
-    setTimeout(() => { el.style.strokeDashoffset = '0'; }, 2000 + (i * 1500));
+  if (!webSvg || webDrawn) return;
+
+  webDrawn = true;
+
+  const elements = Array.from(
+    webSvg.querySelectorAll<SVGLineElement | SVGPathElement>('.web-silk')
+  );
+
+  const spokeCount = 24;
+
+  elements.forEach((el, i) => {
+    const length = el.getTotalLength();
+
+    el.style.strokeDasharray = String(length);
+    el.style.strokeDashoffset = String(length);
+
+    const isSpoke = i < spokeCount;
+    const delay = isSpoke
+      ? i * 35
+      : 1800 + (i - spokeCount) * 350;
+
+    const animation = el.animate(
+      [
+        { strokeDashoffset: length },
+        { strokeDashoffset: 0 },
+      ],
+      {
+        duration: isSpoke ? 1400 : 1200,
+        delay,
+        easing: 'ease-in-out',
+        fill: 'forwards',
+      }
+    );
+
+    webAnimations.push(animation);
   });
 }
+
 
 function setPetPos(corner: string) {
   if (!petEl) return;
@@ -81,53 +199,81 @@ function setPetPos(corner: string) {
 
 function resetIdle(cleanupFns: (() => void)[]) {
   if (idleTimer) clearTimeout(idleTimer);
+
   if (isIdle) {
     isIdle = false;
+
     if (walkTimer) clearTimeout(walkTimer);
-    if (webSvg) webSvg.innerHTML = ''; 
+    if (webDrawTimer) clearTimeout(webDrawTimer);
+
+    walkTimer = null;
+    webDrawTimer = null;
+
+    webAnimations.forEach(animation => animation.cancel());
+    webAnimations = [];
+
+    webSvg?.remove();
+    webSvg = null;
+    webDrawn = false;
 
     if (petEl) {
-      petEl.style.opacity = '0'; 
+      petEl.style.opacity = '0';
+
       setTimeout(() => {
         if (!petEl) return;
-        petEl.style.transition = 'none'; 
+
+        petEl.style.transition = 'none';
         currentCorner = 'RB';
         setPetPos('RB');
-        void petEl.offsetWidth; 
-        petEl.style.transition = `left 10s linear, top 10s linear, opacity 0.3s ease`;
+
+        void petEl.offsetWidth;
+
+        petEl.style.transition = 'left 10s linear, top 10s linear, opacity 0.3s ease';
         petEl.style.opacity = '1';
       }, 300);
     }
   }
-  idleTimer = setTimeout(() => { isIdle = true; walkSequence(); }, 30000);
+
+  idleTimer = setTimeout(() => {
+    isIdle = true;
+    walkSequence();
+  }, 30000);
 }
 
 function walkSequence() {
   if (!isIdle || !petEl) return;
   const petType = (petEl as any).dataset.type || 'cat';
   
-  if (petType === 'spider') {
-    if (!webSvg) {
-      createWebSVG();
-      petEl.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
-      petEl.style.left = `${window.innerWidth/2 - 32}px`;
-      petEl.style.top = `${window.innerHeight/2 - 32}px`;
-      currentCorner = 'CENTER';
-      setTimeout(triggerWebDraw, 2000);
-      walkTimer = setTimeout(walkSequence, 12000);
-    } else {
-      const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
-      const next = corners[Math.floor(Math.random() * corners.length)];
-      petEl.style.transition = 'left 3s ease-in-out, top 3s ease-in-out';
-      if (next === 'CENTER') {
-        petEl.style.left = `${window.innerWidth/2 - 32}px`;
-        petEl.style.top = `${window.innerHeight/2 - 32}px`;
-      } else { setPetPos(next); }
-      currentCorner = next;
-      walkTimer = setTimeout(walkSequence, 5000);
-    }
-    return;
+if (petType === 'spider') {
+  if (!webSvg) {
+    createWebSVG();
+
+    petEl.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
+
+    const center = getCornerPos('CENTER');
+    petEl.style.left = `${center.x}px`;
+    petEl.style.top = `${center.y}px`;
+    currentCorner = 'CENTER';
+
+    webDrawTimer = setTimeout(() => {
+      triggerWebDraw();
+      webDrawTimer = null;
+    }, 2000);
+
+    walkTimer = setTimeout(walkSequence, 12000);
+  } else {
+    const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
+    const next = corners[Math.floor(Math.random() * corners.length)];
+
+    petEl.style.transition = 'left 3s ease-in-out, top 3s ease-in-out';
+    setPetPos(next);
+    currentCorner = next;
+
+    walkTimer = setTimeout(walkSequence, 6000);
   }
+
+  return;
+}
 
   const walkDuration = petType === 'snail' ? 35 : petType === 'spiderman' ? 7 : 10;
   
@@ -155,10 +301,13 @@ export function mountPet(s: Settings, cleanupFns: (() => void)[]) {
   removePet();
   if (!s.pet.enabled) return;
   
-  if (s.pet.type === 'spider') createWebSVG();
-
   petEl = document.createElement('div');
   petEl.className = 'pibblora-pet-container';
+  Object.assign(petEl.style, {
+  position: 'fixed',
+  zIndex: '2147483640',
+  pointerEvents: 'none',
+});
   (petEl as any).dataset.type = s.pet.type;
   
   const img = document.createElement('img');
@@ -187,9 +336,24 @@ export function mountPet(s: Settings, cleanupFns: (() => void)[]) {
   cleanupFns.push(() => events.forEach(e => window.removeEventListener(e, handler)));
 }
 
-export function removePet() { 
+export function removePet() {
   if (idleTimer) clearTimeout(idleTimer);
   if (walkTimer) clearTimeout(walkTimer);
-  petEl?.remove(); petEl = null; 
-  if (webSvg) { webSvg.remove(); webSvg = null; }
+  if (webDrawTimer) clearTimeout(webDrawTimer);
+
+  idleTimer = null;
+  walkTimer = null;
+  webDrawTimer = null;
+
+  webAnimations.forEach(animation => animation.cancel());
+  webAnimations = [];
+
+  petEl?.remove();
+  petEl = null;
+
+  webSvg?.remove();
+  webSvg = null;
+
+  webDrawn = false;
+  isIdle = false;
 }

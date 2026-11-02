@@ -17,6 +17,140 @@ const getCornerPos = (corner: string) => {
   }
 };
 
+
+function SpiderWeb({ color, phase }: { color: string; phase: number }) {
+  const [size, setSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
+  useEffect(() => {
+    const resize = () => {
+      setSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+
+  const { width, height } = size;
+  const cx = width / 2;
+  const cy = height / 2;
+  const spokes = 24;
+  const rings = 12;
+
+  const boundary = Array.from({ length: spokes }, (_, i) => {
+    const angle = (i / spokes) * Math.PI * 2;
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+
+    const scale = Math.min(
+      (width / 2) / Math.max(Math.abs(dx), 0.0001),
+      (height / 2) / Math.max(Math.abs(dy), 0.0001)
+    );
+
+    return {
+      x: cx + dx * scale,
+      y: cy + dy * scale,
+    };
+  });
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none',
+        zIndex: 49,
+        overflow: 'hidden',
+      }}
+    >
+      <g
+        fill="none"
+        stroke={color}
+        strokeWidth="1.35"
+        strokeOpacity="0.95"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ filter: `drop-shadow(0 0 3px ${color})` }}
+      >
+        {boundary.map((point, i) => (
+          <motion.line
+            key={`silk-${i}`}
+            x1={cx}
+            y1={cy}
+            x2={point.x}
+            y2={point.y}
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: phase >= 1 ? 1 : 0 }}
+            transition={{
+              duration: 1.4,
+              delay: i * 0.035,
+              ease: 'easeInOut',
+            }}
+          />
+        ))}
+
+        {Array.from({ length: rings }, (_, i) => {
+          const progress = (i + 1) / rings;
+
+          const points = boundary.map((point, j) => {
+            const irregularity =
+              1 + 0.012 * Math.sin(j * 2.3 + i);
+
+            const t = progress * irregularity;
+
+            return {
+              x: cx + (point.x - cx) * t,
+              y: cy + (point.y - cy) * t,
+            };
+          });
+
+          let d = '';
+
+          points.forEach((point, j) => {
+            const next = points[(j + 1) % spokes];
+            const mx = (point.x + next.x) / 2;
+            const my = (point.y + next.y) / 2;
+
+            d += `${j === 0 ? `M ${mx} ${my}` : ''} Q ${point.x} ${point.y} ${mx} ${my} `;
+          });
+
+          d += 'Z';
+
+          return (
+            <motion.path
+              key={`spiral-${i}`}
+              d={d}
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{
+                pathLength: phase >= 2 ? 1 : 0,
+                opacity: phase >= 2 ? 1 : 0,
+              }}
+              transition={{
+                pathLength: {
+                  duration: 1.2,
+                  delay: 1.8 + i * 0.35,
+                  ease: 'easeInOut',
+                },
+                opacity: { duration: 0.2 },
+              }}
+            />
+          );
+        })}
+      </g>
+    </svg>
+  );
+}
+
+
 export default function PetMagic() {
   const { settings } = useStore();
   
@@ -30,8 +164,10 @@ export default function PetMagic() {
   const idleTimer = useRef<any>(null);
 
   // Theme-based Web Color
-  const isDarkTheme = settings.theme.preset === 'dark';
-  const webColor = isDarkTheme ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
+const isDarkTheme = settings.theme.preset === 'dark';
+const webColor = isDarkTheme
+  ? 'rgba(255,255,255,0.85)'
+  : 'rgba(75,45,65,0.78)';
 
   useEffect(() => {
     const t = setTimeout(() => setFade(1), 100);
@@ -62,17 +198,46 @@ export default function PetMagic() {
     idleTimer.current = setTimeout(() => setIsIdle(true), 30000);
   }, [isIdle]);
 
-  useEffect(() => {
-    if (!settings.pet.enabled) return;
-    const events = ['mousemove', 'mousedown', 'scroll', 'keydown', 'touchstart'];
-    events.forEach(e => window.addEventListener(e, resetIdle));
-    resetIdle();
-    return () => {
-      events.forEach(e => window.removeEventListener(e, resetIdle));
-      if (idleTimer.current) clearTimeout(idleTimer.current);
-      if (walkTimer.current) clearTimeout(walkTimer.current);
-    };
-  }, [resetIdle, settings.pet.enabled]);
+useEffect(() => {
+  if (!isIdle || !settings.pet.enabled || settings.pet.type !== 'spider') return;
+
+  const firstTimer = setTimeout(() => {
+    currentCorner.current = 'CENTER';
+    setPos(getCornerPos('CENTER'));
+    setWebPhase(1);
+  }, 10000);
+
+  return () => clearTimeout(firstTimer);
+}, [isIdle, settings.pet.enabled, settings.pet.type]);
+
+useEffect(() => {
+  if (!isIdle || !settings.pet.enabled || settings.pet.type !== 'spider') return;
+
+  let timer: ReturnType<typeof setTimeout>;
+
+  if (webPhase === 1) {
+    timer = setTimeout(() => setWebPhase(2), 2000);
+  } else if (webPhase === 2) {
+    timer = setTimeout(() => {
+      const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
+      const next = corners[Math.floor(Math.random() * corners.length)];
+
+      currentCorner.current = next;
+      setPos(getCornerPos(next));
+      setWebPhase(3);
+    }, 9000);
+  } else if (webPhase === 3) {
+    timer = setTimeout(() => {
+      const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
+      const next = corners[Math.floor(Math.random() * corners.length)];
+
+      currentCorner.current = next;
+      setPos(getCornerPos(next));
+    }, 6000);
+  }
+
+  return () => clearTimeout(timer);
+}, [isIdle, settings.pet.enabled, settings.pet.type, webPhase]);
 
   useEffect(() => {
     if (!isIdle || !settings.pet.enabled) return;
@@ -86,9 +251,9 @@ export default function PetMagic() {
           setPos(getCornerPos('CENTER'));
           walkTimer.current = setTimeout(walkSequence, 2000);
         } else if (webPhase === 1) {
-          setWebPhase(2);
-          walkTimer.current = setTimeout(walkSequence, 5000);
-        } else {
+  setWebPhase(2);
+  walkTimer.current = setTimeout(walkSequence, 8000);
+} else {
           const corners = ['LT', 'RT', 'LB', 'RB', 'CENTER'];
           const next = corners[Math.floor(Math.random() * corners.length)];
           currentCorner.current = next;
@@ -150,61 +315,9 @@ export default function PetMagic() {
   return (
     <div style={{ position: 'fixed', left: 0, top: 0, pointerEvents: 'none', zIndex: 50 }}>
       
-      {/* Spider Web (Theme Aware & X -> O Sequence) */}
-      {settings.pet.type === 'spider' && (
-        <svg style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', zIndex: 49, pointerEvents: 'none' }}>
-          <g stroke={webColor} strokeWidth="1.5" fill="none">
-            {/* Phase 1: X (Diagonals) */}
-            <motion.line 
-              x1="50%" y1="50%" x2="0%" y2="0%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 2 }} 
-            />
-            <motion.line 
-              x1="50%" y1="50%" x2="100%" y2="0%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 2 }} 
-            />
-            <motion.line 
-              x1="50%" y1="50%" x2="100%" y2="100%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 2 }} 
-            />
-            <motion.line 
-              x1="50%" y1="50%" x2="0%" y2="100%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 2 }} 
-            />
-            {/* Phase 1: + (Cardinals) */}
-            <motion.line 
-              x1="50%" y1="50%" x2="50%" y2="0%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 3.5 }} 
-            />
-            <motion.line 
-              x1="50%" y1="50%" x2="100%" y2="50%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 3.5 }} 
-            />
-            <motion.line 
-              x1="50%" y1="50%" x2="50%" y2="100%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 3.5 }} 
-            />
-            <motion.line 
-              x1="50%" y1="50%" x2="0%" y2="50%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 1 ? 1 : 0 }} transition={{ duration: 1.5, delay: 3.5 }} 
-            />
-
-            {/* Phase 2: O (Concentric Rings) */}
-            <motion.polygon 
-              points="50%,40% 57%,43% 60%,50% 57%,57% 50%,60% 43%,57% 40%,50% 43%,43%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 2 ? 1 : 0 }} transition={{ duration: 2, delay: 0 }} 
-            />
-            <motion.polygon 
-              points="50%,25% 68%,32% 75%,50% 68%,68% 50%,75% 32%,68% 25%,50% 32%,32%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 2 ? 1 : 0 }} transition={{ duration: 2, delay: 1.5 }} 
-            />
-            <motion.polygon 
-              points="50%,10% 80%,20% 90%,50% 80%,80% 50%,90% 20%,80% 10%,50% 20%,20%" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: webPhase >= 2 ? 1 : 0 }} transition={{ duration: 2, delay: 3 }} 
-            />
-          </g>
-        </svg>
-      )}
+{settings.pet.type === 'spider' && webPhase > 0 && (
+  <SpiderWeb color={webColor} phase={webPhase} />
+)}
 
       <motion.div
         animate={{ x: pos.x, y: pos.y, opacity: fade }}
