@@ -21,6 +21,7 @@ const WidgetManager = lazy(() => import('./pages/WidgetManager'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const About = lazy(() => import('./pages/About'));
 const ExtensionPage = lazy(() => import('./pages/ExtensionPage'));
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const nav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -80,6 +81,11 @@ function Shell({ children }: { children: ReactNode }) {
       </main>
 
       <footer className="mx-auto w-full max-w-6xl px-4 pb-8 pt-4 text-center text-xs opacity-60">
+        <div className="flex flex-wrap items-center justify-center gap-4 mb-2">
+          <Link to="/privacy" className="hover:text-[color:var(--c-primary)] transition-colors">Privacy Policy</Link>
+          <span>·</span>
+          <Link to="/about" className="hover:text-[color:var(--c-primary)] transition-colors">About</Link>
+        </div>
         <p>© {new Date().getFullYear()} Praveenkanth G. All rights reserved.</p>
         <p className="mt-1">Pibblora · A Little Magic in Every Click</p>
       </footer>
@@ -114,6 +120,7 @@ export default function App() {
           <Route path="/settings" element={<Shell><SettingsPage /></Shell>} />
           <Route path="/extension" element={<Shell><ExtensionPage /></Shell>} />
           <Route path="/about" element={<Shell><About /></Shell>} />
+          <Route path="/privacy" element={<Shell><PrivacyPolicy /></Shell>} /> 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
