@@ -26,16 +26,19 @@ const copyExtensionFiles = () => ({
       fs.copyFileSync(source, path.join(iconOutput, file));
     }
 
-    // 3. Copy spider.png for web_accessible_resources
-    const spiderSource = 'public/spider.png';
-    const spiderDest = path.join(outputDir, 'spider.png');
-    
-    if (fs.existsSync(spiderSource)) {
-      fs.copyFileSync(spiderSource, spiderDest);
-      console.log('✅ Copied spider.png to dist-extension');
-    } else {
-      console.warn('⚠️ Warning: public/spider.png not found. The extension spiderman pet may not load.');
-    }
+    // 3. Copy local images for web_accessible_resources
+    const images = ['spider.png', 'spiderman.png'];
+    images.forEach((img) => {
+      const source = path.join('public', img);
+      const dest = path.join(outputDir, img);
+      
+      if (fs.existsSync(source)) {
+        fs.copyFileSync(source, dest);
+        console.log(`✅ Copied ${img} to dist-extension`);
+      } else {
+        console.warn(`⚠️ Warning: public/${img} not found.`);
+      }
+    });
   }
 });
 

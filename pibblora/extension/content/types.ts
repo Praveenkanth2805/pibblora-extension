@@ -16,7 +16,8 @@ export const PRESET_COLORS: Record<string, string> = {
 };
 
 // Locally hosted image for Spiderman
-export const SPIDERMAN_IMG = chrome.runtime.getURL('spider.png');
+export const SPIDERMAN_IMG = chrome.runtime.getURL('spiderman.png');
+export const SPIDER_IMG = chrome.runtime.getURL('spider.png');
 
 export const PET_ICONS: Record<string, string> = {
   cat: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg',
@@ -24,7 +25,7 @@ export const PET_ICONS: Record<string, string> = {
   star: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2b50.svg',
   blob: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f47e.svg',
   snail: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f40c.svg',
-  spider: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f577.svg',
+  spider: SPIDER_IMG,
   spiderman: SPIDERMAN_IMG, 
   pikachu: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png',
 };

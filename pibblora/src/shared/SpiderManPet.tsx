@@ -46,7 +46,7 @@ export function SpiderManPet({
         style={{ filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.2))' }}
       >
         <img 
-          src={icon?.src || '/spider.png'} 
+          src={icon?.src || '/spiderman.png'} 
           alt="spiderman" 
           style={{ width: size, height: 'auto', objectFit: 'contain' }} 
         />

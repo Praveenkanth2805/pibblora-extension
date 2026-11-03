@@ -33,10 +33,10 @@ export const petIcons: Record<string, PetIcon> = {
   star: { type: 'image', src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2b50.svg' },
   blob: { type: 'image', src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f47e.svg' },
   snail: { type: 'image', src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f40c.svg' },
-  spider: { type: 'image', src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f577.svg' },
+  spider: { type: 'image', src: '/spider.png'  },
   
-  // Local Image Path (நீங்க public/spider.png ல வச்சிருந்தா இது வேலை செய்யும்)
-  spiderman: { type: 'image', src: '/spider.png' },
+  // Local Image Path (நீங்க public/spiderman.png ல வச்சிருந்தா இது வேலை செய்யும்)
+  spiderman: { type: 'image', src: '/spiderman.png' },
   
   pikachu: { type: 'image', src: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png' },
 };
