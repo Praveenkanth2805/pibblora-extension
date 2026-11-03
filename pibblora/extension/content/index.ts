@@ -1,5 +1,4 @@
 import { Settings, DEFAULTS, KEY } from './types';
-import { applyTheme } from './theme';
 import { mountCursor } from './cursor';
 import { mountPet, removePet, setTheme } from './pet';
 
@@ -30,14 +29,12 @@ function apply(s: Settings) {
   injectStyle();
   mountPet(s, cleanupFns);
   mountCursor(s, cleanupFns);
-  applyTheme(s.theme.preset);
 }
 
 function teardown() {
   removePet();
   cleanupFns.forEach(fn => fn());
   cleanupFns = [];
-  document.getElementById('pibblora-tint')?.remove();
 }
 
 async function getSettings(): Promise<Settings> {

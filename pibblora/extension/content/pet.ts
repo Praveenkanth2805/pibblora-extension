@@ -370,17 +370,22 @@ function walkSequence() {
   
 if (petType === 'spider') {
   if (!webSvg) {
+    // Add smooth transition to center
+    if (petEl) petEl.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
     setPetPos('CENTER');
     currentCorner = 'CENTER';
 
     walkTimer = setTimeout(() => {
       if (!isIdle) return;
 
+      // Remove transition before web build and crawl
+      if (petEl) petEl.style.transition = 'none';
+
       createWebSVG();
       triggerWebDraw();
 
       walkTimer = setTimeout(crawlOnWeb, 6500);
-    }, 2000);
+    }, 2000); // Wait 2s for spider to reach center
   } else {
     crawlOnWeb();
   }

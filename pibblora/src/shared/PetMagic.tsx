@@ -286,6 +286,8 @@ if (isIdleRef.current) {
         };
 
         if (crawlElement.current) {
+          // Add smooth transition to center
+          crawlElement.current.style.transition = 'left 2s ease-in-out, top 2s ease-in-out';
           crawlElement.current.style.left = `${center.x}px`;
           crawlElement.current.style.top = `${center.y}px`;
         }
@@ -294,6 +296,11 @@ if (isIdleRef.current) {
 
         walkTimer.current = setTimeout(() => {
           if (cancelled) return;
+
+          // Remove transition so rAF can take over crawling
+          if (crawlElement.current) {
+            crawlElement.current.style.transition = 'none';
+          }
 
           setWebPhase(1);
 
@@ -306,7 +313,7 @@ if (isIdleRef.current) {
               if (!cancelled) startSpider();
             }, isTestingRef.current ? 0 : 6500);
           },isTestingRef.current ? 0 : 2000);
-        },isTestingRef.current ? 0 : 2000);
+        },isTestingRef.current ? 0 : 2000); // Wait 2s for spider to reach center
       },isTestingRef.current ? 0 : 10000);
     } else {
       walkTimer.current = setTimeout(walkSequence,isTestingRef.current ? 0 : 10000);
