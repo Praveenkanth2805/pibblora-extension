@@ -1,4 +1,5 @@
 import { Settings, CURSOR_EMOJI, PRESET_COLORS } from './types';
+import { getAppRoot } from './index';
 
 export function mountCursor(s: Settings, cleanupFns: (() => void)[]) {
   if (!s.cursor.enabled) {
@@ -27,7 +28,7 @@ export function mountCursor(s: Settings, cleanupFns: (() => void)[]) {
       width: `${s.cursor.size * 0.6}px`, height: `${s.cursor.size * 0.6}px`,
       transition: 'width 0.2s, height 0.2s', willChange: 'transform'
     });
-    document.body.appendChild(mainCursorEl);
+    getAppRoot().appendChild(mainCursorEl); // Use getAppRoot for Hydration safety
   } else {
     styleEl?.remove();
     document.body.style.cursor = 'auto';
@@ -43,7 +44,7 @@ export function mountCursor(s: Settings, cleanupFns: (() => void)[]) {
       pointerEvents: 'none', zIndex: '2147483647',
       transition: 'all 0.5s ease-out', willChange: 'transform, opacity'
     });
-    document.body.appendChild(ripple);
+    getAppRoot().appendChild(ripple); // Use getAppRoot for Hydration safety
     requestAnimationFrame(() => {
       ripple.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%) scale(4)`;
       ripple.style.opacity = '0';
@@ -102,7 +103,7 @@ export function mountCursor(s: Settings, cleanupFns: (() => void)[]) {
         willChange: 'transform, opacity', ...extraStyles
       });
       
-      document.body.appendChild(dot);
+      getAppRoot().appendChild(dot); // Use getAppRoot for Hydration safety
       void dot.offsetWidth; 
 
       requestAnimationFrame(() => {

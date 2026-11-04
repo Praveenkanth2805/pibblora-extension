@@ -4,19 +4,30 @@ import { mountPet, removePet, setTheme } from './pet';
 
 let styleEl: HTMLStyleElement | null = null;
 let cleanupFns: (() => void)[] = [];
+let appRoot: HTMLDivElement | null = null;
+
+// Function to get or create a safe root element for React Hydration
+export function getAppRoot() {
+  if (!appRoot) {
+    appRoot = document.createElement('div');
+    appRoot.id = 'pibblora-root';
+    Object.assign(appRoot.style, {
+      position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
+      pointerEvents: 'none', zIndex: '2147483647'
+    });
+    // Append to <html> instead of <body> to avoid React hydration mismatch
+    document.documentElement.appendChild(appRoot);
+  }
+  return appRoot;
+}
 
 function injectStyle() {
   if (styleEl) return;
   styleEl = document.createElement('style');
   styleEl.id = 'pibblora-style';
   styleEl.textContent = `
-    .pibblora-pet-container {
-      position: fixed; top: 0; left: 0; z-index: 2147483646; pointer-events: none;
-      opacity: 0; transition: opacity 0.3s ease;
-    }
-    .pibblora-pet-inner {
-      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2)); user-select: none;
-    }
+    .pibblora-pet-container { position: fixed; top: 0; left: 0; z-index: 2147483646; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+    .pibblora-pet-inner { filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2)); user-select: none; }
     @keyframes pibblora-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
     @keyframes pibblora-float  { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-8px) rotate(3deg)} }
     @keyframes pibblora-wiggle { 0%,100%{transform:rotate(-10deg)} 50%{transform:rotate(10deg)} }
@@ -25,7 +36,7 @@ function injectStyle() {
 }
 
 function apply(s: Settings) {
-  setTheme(s.theme.preset); // Pass theme to pet logic
+  setTheme(s.theme.preset); 
   injectStyle();
   mountPet(s, cleanupFns);
   mountCursor(s, cleanupFns);
