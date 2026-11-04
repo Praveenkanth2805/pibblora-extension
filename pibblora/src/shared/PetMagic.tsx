@@ -30,6 +30,8 @@ export default function PetMagic() {
 
   const [pos, setPos] = useState(() => getCornerPos("RB"));
   const [fade, setFade] = useState(0);
+  const [isTeleporting, setIsTeleporting] = useState(false); // <-- Added
+  const [isJumping, setIsJumping] = useState(false);         // <-- Added
   const [webPhase, setWebPhase] = useState(0);
 
   const currentCorner = useRef("RB");
@@ -200,12 +202,43 @@ export default function PetMagic() {
       const duration = settings.pet.type === "spiderman" ? 7000 : settings.pet.type === "snail" ? 35000 : 10000;
 
       if (settings.pet.type === "spiderman") {
-        const seq = ["RT", "RB", "RT", "LT", "LB", "LT"];
-        let idx = seq.indexOf(currentCorner.current);
-        if (idx === -1) idx = 0;
-        currentCorner.current = seq[(idx + 1) % seq.length];
-        setPos(getCornerPos(currentCorner.current));
-        walkTimer.current = setTimeout(walkSequence, duration);
+        const roll = Math.random();
+        let nextCorner = currentCorner.current;
+        let switchSide = false;
+
+        if (currentCorner.current === 'RB') {
+          if (roll < 0.5) nextCorner = 'RT';
+          else { nextCorner = 'LB'; switchSide = true; }
+        } else if (currentCorner.current === 'RT') {
+          if (roll < 0.5) nextCorner = 'RB';
+          else { nextCorner = 'LT'; switchSide = true; }
+        } else if (currentCorner.current === 'LB') {
+          if (roll < 0.5) nextCorner = 'LT';
+          else { nextCorner = 'RB'; switchSide = true; }
+        } else if (currentCorner.current === 'LT') {
+          if (roll < 0.5) nextCorner = 'LB';
+          else { nextCorner = 'RT'; switchSide = true; }
+        }
+
+        if (switchSide) {
+          // Switch Sides: Fade Out & Fade In
+          setFade(0);
+          setIsTeleporting(true);
+          walkTimer.current = setTimeout(() => {
+            currentCorner.current = nextCorner;
+            setPos(getCornerPos(nextCorner));
+            setFade(1);
+            setIsTeleporting(false);
+            walkTimer.current = setTimeout(walkSequence, 2500);
+          }, 300);
+        } else {
+          // Same Side: Jump/Bounce
+          const isFalling = (currentCorner.current.endsWith('T') && nextCorner.endsWith('B'));
+          setIsJumping(isFalling);
+          currentCorner.current = nextCorner;
+          setPos(getCornerPos(nextCorner));
+          walkTimer.current = setTimeout(walkSequence, 2000);
+        }
         return;
       }
 
@@ -289,7 +322,18 @@ export default function PetMagic() {
             </div>
           </div>
         ) : (
-          <motion.div initial={false} animate={{ x: pos.x, y: pos.y, opacity: fade }} transition={{ x: { duration: walkDuration, ease: "linear" }, y: { duration: walkDuration, ease: "linear" }, opacity: { duration: 0.3 } }}>
+          <motion.div 
+            initial={false} 
+            animate={{ x: pos.x, y: pos.y, opacity: fade }} 
+            transition={{ 
+              x: { duration: isTeleporting ? 0 : (settings.pet.type === 'spiderman' ? 1.5 : walkDuration), ease: 'linear' }, 
+              y: { 
+                duration: isTeleporting ? 0 : (settings.pet.type === 'spiderman' ? 1.5 : walkDuration), 
+                ease: settings.pet.type === 'spiderman' ? (isJumping ? [0.68, -0.55, 0.265, 1.55] : 'easeInOut') : 'linear' 
+              },
+              opacity: { duration: 0.3 }
+            }}
+          >
             <motion.div animate={animate} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} style={{ filter: "drop-shadow(0 8px 12px rgba(0,0,0,0.2))" }}>
               <img src={iconSrc} alt={settings.pet.type} style={{ width: settings.pet.size, height: "auto", objectFit: "contain" }} />
             </motion.div>

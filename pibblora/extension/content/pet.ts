@@ -301,14 +301,45 @@ function walkSequence() {
     return;
   }
 
-  const walkDuration = petType === 'snail' ? 35 : petType === 'spiderman' ? 7 : 10;
+  const walkDuration = petType === 'snail' ? 35 : 10;
   if (petType === 'spiderman') {
-    const seq = ['RT', 'RB', 'RT', 'LT', 'LB', 'LT'];
-    let idx = seq.indexOf(currentCorner);
-    if (idx === -1) idx = 0;
-    currentCorner = seq[(idx + 1) % seq.length];
-    setPetPos(currentCorner);
-    walkTimer = setTimeout(walkSequence, 7000);
+    const roll = Math.random();
+    let nextCorner = currentCorner;
+    let switchSide = false;
+
+    if (currentCorner === 'RB') {
+      if (roll < 0.5) nextCorner = 'RT';
+      else { nextCorner = 'LB'; switchSide = true; }
+    } else if (currentCorner === 'RT') {
+      if (roll < 0.5) nextCorner = 'RB';
+      else { nextCorner = 'LT'; switchSide = true; }
+    } else if (currentCorner === 'LB') {
+      if (roll < 0.5) nextCorner = 'LT';
+      else { nextCorner = 'RB'; switchSide = true; }
+    } else if (currentCorner === 'LT') {
+      if (roll < 0.5) nextCorner = 'LB';
+      else { nextCorner = 'RT'; switchSide = true; }
+    }
+
+    if (switchSide) {
+      petEl.style.opacity = '0';
+      setTimeout(() => {
+        if (!petEl) return;
+        petEl.style.transition = 'none';
+        currentCorner = nextCorner;
+        setPetPos(currentCorner);
+        void petEl.offsetWidth;
+        petEl.style.opacity = '1';
+        petEl.style.transition = `left 1.5s linear, top 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease`;
+        walkTimer = setTimeout(walkSequence, 2500);
+      }, 300);
+    } else {
+      const isFalling = currentCorner.endsWith('T') && nextCorner.endsWith('B');
+      petEl.style.transition = `left 1.5s linear, top 1.5s ${isFalling ? 'cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'ease-in-out'}, opacity 0.3s ease`;
+      currentCorner = nextCorner;
+      setPetPos(currentCorner);
+      walkTimer = setTimeout(walkSequence, 2000);
+    }
     return;
   }
 
