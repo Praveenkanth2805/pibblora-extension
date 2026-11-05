@@ -4,6 +4,7 @@ import { useStore } from '../../shared/StoreContext';
 import { Card, PageHeader, Section, Toggle } from '../../shared/ui';
 import { DreamTabPreview } from '../components/DreamTabPreview';
 import type { Settings } from '../../shared/types';
+import SEO from '../../shared/SEO';
 
 const items: { key: keyof Settings['widgets']; label: string; desc: string }[] = [
   { key: 'miniClock', label: 'Mini Clock', desc: 'Compact time display.' },
@@ -16,6 +17,11 @@ export default function WidgetManager() {
   const { settings, update } = useStore();
   return (
     <>
+    <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/widgets"
+    />
       <PageHeader title="Widget Manager" subtitle="Pick what shows up on your DreamTab." back={<Link to="/dashboard" className="mt-1.5 opacity-70 hover:opacity-100"><ArrowLeft size={18} /></Link>} />
       
       <div className="grid gap-6 md:grid-cols-2">

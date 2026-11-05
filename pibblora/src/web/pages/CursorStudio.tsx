@@ -4,6 +4,7 @@ import { useStore } from '../../shared/StoreContext';
 import { Card, Field, PageHeader, Section, Toggle } from '../../shared/ui';
 import type { CursorStyle } from '../../shared/types';
 import { cursorEmoji } from '../../shared/theme';
+import SEO from '../../shared/SEO';
 
 const styles: CursorStyle[] = ['stars', 'hearts', 'bubbles', 'trail', 'neon'];
 const colors = ['#FFC9DE', '#C9B6FF', '#BDE7FF', '#C6F4DC', '#FFE0B2'];
@@ -19,6 +20,11 @@ export default function CursorStudio() {
   const c = settings.cursor;
   return (
     <>
+    <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/cursor"
+    />
       <PageHeader title="Cursor Studio" subtitle="A little sparkle every time you move." back={<Link to="/dashboard" className="mt-1.5 opacity-70 hover:opacity-100"><ArrowLeft size={18} /></Link>} />
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

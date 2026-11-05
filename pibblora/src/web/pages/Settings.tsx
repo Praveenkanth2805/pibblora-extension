@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useStore } from '../../shared/StoreContext';
 import { Button, Card, PageHeader, Section } from '../../shared/ui';
 import { defaultSettings, saveSettings } from '../../shared/storage';
+import SEO from '../../shared/SEO';
 
 export default function SettingsPage() {
   const { settings, update } = useStore();
@@ -38,6 +39,11 @@ export default function SettingsPage() {
 
   return (
     <>
+    <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/settings"
+    />
       <PageHeader title="Settings" subtitle="Backup, restore, or start fresh." back={<Link to="/dashboard" className="mt-1.5 opacity-70 hover:opacity-100"><ArrowLeft size={18} /></Link>} />
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

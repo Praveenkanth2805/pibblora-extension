@@ -6,6 +6,7 @@ import { Card, Field, PageHeader, Section, Toggle } from '../../shared/ui';
 import { PetPreview } from '../../shared/PetPreview';
 import type { PetAnimation, PetType } from '../../shared/types';
 import { petIcons } from '../../shared/theme';
+import SEO from '../../shared/SEO';
 
 // Added 'spiderman' here
 const types: PetType[] = ['cat', 'bunny', 'star', 'blob', 'pikachu', 'snail', 'spider', 'spiderman'];
@@ -60,6 +61,11 @@ useEffect(() => {
 
   return (
     <>
+    <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/pet"
+    />
       <PageHeader title="Pet Studio" subtitle="Design the companion that follows your cursor."
         back={<Link to="/dashboard" className="mt-1.5 opacity-70 hover:opacity-100"><ArrowLeft size={18} /></Link>} />
       <div className="grid gap-6 md:grid-cols-2">

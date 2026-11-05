@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Cat, MousePointer2, Palette, LayoutGrid, Chrome } from 'lucide-react';
 import { Button, Card } from '../../shared/ui';
 import { ExtensionDownload } from '../components/ExtensionDownload';
+import SEO from '../../shared/SEO';
 
 const features = [
   { icon: Cat, title: 'Browser Buddy', desc: 'Animated companions that live on your pages.' },
@@ -14,6 +15,11 @@ const features = [
 export default function Landing() {
   return (
     <div className="min-h-screen">
+      <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/"
+    />
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold">
           <img

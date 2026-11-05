@@ -2,6 +2,7 @@ import { ShieldCheck, ArrowLeft, Lock, EyeOff, Code2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion'; // <-- Imported motion
 import { Card, PageHeader } from '../../shared/ui';
+import SEO from '../../shared/SEO';
 
 // Animation Variants
 const containerVariants = {
@@ -26,6 +27,11 @@ const itemVariants = {
 export default function PrivacyPolicy() {
   return (
     <>
+    <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/privacy"
+    />
       <PageHeader 
         title="Privacy Policy" 
         subtitle="Last updated: November 2025" 

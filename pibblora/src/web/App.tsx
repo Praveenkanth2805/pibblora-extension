@@ -14,6 +14,7 @@ import { MagicLayer } from '../shared/MagicLayer';
 import Landing from './pages/Landing';
 import MobileNavigation from './components/MobileNavigation';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import { HelmetProvider } from 'react-helmet-async';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const PetStudio = lazy(() => import('./pages/PetStudio'));
@@ -114,6 +115,7 @@ function PageLoader() {
 export default function App() {
   return (
     <>
+    <HelmetProvider>
       <MagicLayer />
 
       <Suspense fallback={<PageLoader />}>
@@ -131,6 +133,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      </HelmetProvider>
     </>
   );
 }

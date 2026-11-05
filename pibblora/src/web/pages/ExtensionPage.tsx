@@ -1,5 +1,6 @@
 import { Chrome, Download, Puzzle, Settings, CheckCircle2, Sparkles, History } from 'lucide-react';
 import { Card, PageHeader, Button } from '../../shared/ui';
+import SEO from '../../shared/SEO';
 
 const RELEASES = [
   {
@@ -63,6 +64,11 @@ const steps = [
 export default function ExtensionPage() {
   return (
     <>
+    <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/extension"
+    />
       <PageHeader 
         title="Get Pibblora for Chrome" 
         subtitle="Install manually via Developer Mode. No store required." 

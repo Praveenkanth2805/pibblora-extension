@@ -4,6 +4,7 @@ import { useStore } from '../../shared/StoreContext';
 import { Card, PageHeader } from '../../shared/ui';
 import { PetPreview } from '../../shared/PetPreview';
 import { petIcons, cursorEmoji, presets } from '../../shared/theme';
+import SEO from '../../shared/SEO';
 
 const tiles = [
   { to: '/pet', icon: Cat, title: 'Pet Studio', desc: 'Customize your browser buddy.' },
@@ -21,6 +22,11 @@ export default function Dashboard() {
 
   return (
     <>
+    <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/dashboard"
+    />
       <PageHeader title="Dashboard" subtitle="A cozy overview of your Pibblora setup." />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>

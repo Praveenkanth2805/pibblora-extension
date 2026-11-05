@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '../../shared/ui';
 import { ExtensionDownload } from '../components/ExtensionDownload';
+import SEO from '../../shared/SEO';
 
 const socials = [
   {
@@ -99,6 +100,11 @@ export default function About() {
 
   return (
     <>
+    <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/about"
+    />
       <PageHeader
         title="About Pibblora"
         subtitle="A little magic in every click."

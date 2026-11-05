@@ -5,11 +5,17 @@ import { Card, PageHeader, Section } from '../../shared/ui';
 import { presets } from '../../shared/theme';
 import { DreamTabPreview } from '../components/DreamTabPreview'; // <-- NEW
 import type { ThemePreset } from '../../shared/types';
+import SEO from '../../shared/SEO';
 
 export default function ThemeStudio() {
   const { settings, update } = useStore();
   return (
     <>
+    <SEO
+      title="Pibblora Extension – Cute Chrome Browser Customization"
+      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
+      path="/theme"
+    />
       <PageHeader title="Theme Studio" subtitle="Soft pastel palettes and a cozy dark mode." back={<Link to="/dashboard" className="mt-1.5 opacity-70 hover:opacity-100"><ArrowLeft size={18} /></Link>} />
       
       <div className="grid gap-6 md:grid-cols-2">
