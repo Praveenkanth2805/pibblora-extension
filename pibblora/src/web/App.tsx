@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { MagicLayer } from '../shared/MagicLayer';
 import Landing from './pages/Landing';
+import MobileNavigation from './components/MobileNavigation';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const PetStudio = lazy(() => import('./pages/PetStudio'));
@@ -21,7 +23,6 @@ const WidgetManager = lazy(() => import('./pages/WidgetManager'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const About = lazy(() => import('./pages/About'));
 const ExtensionPage = lazy(() => import('./pages/ExtensionPage'));
-import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const nav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -57,15 +58,15 @@ function Shell({ children }: { children: ReactNode }) {
 
           <nav className="hidden gap-1 md:flex" aria-label="Primary">
             {nav.map(n => {
-              const Active = loc.pathname === n.to;
+              const active = loc.pathname === n.to;
               const Icon = n.icon;
 
               return (
                 <Link
                   key={n.to}
                   to={n.to}
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition ${Active ? 'font-semibold' : 'opacity-70 hover:opacity-100'}`}
-                  style={Active ? { background: 'var(--c-primary)' } : undefined}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition ${active ? 'font-semibold' : 'opacity-70 hover:opacity-100'}`}
+                  style={active ? { background: 'var(--c-primary)' } : undefined}
                 >
                   <Icon size={14} />
                   {n.label}
@@ -76,19 +77,25 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 flex-1">
+      <main className="mx-auto w-full max-w-6xl px-4 pt-8 pb-36 md:pb-8 flex-1">
         {children}
       </main>
 
-      <footer className="mx-auto w-full max-w-6xl px-4 pb-8 pt-4 text-center text-xs opacity-60">
-        <div className="flex flex-wrap items-center justify-center gap-4 mb-2">
-          <Link to="/privacy" className="hover:text-[color:var(--c-primary)] transition-colors">Privacy Policy</Link>
+      <footer className="mx-auto w-full max-w-6xl px-4 pb-32 pt-4 text-center text-xs opacity-60 md:pb-8">
+        <div className="mb-2 flex flex-wrap items-center justify-center gap-4">
+          <Link to="/privacy" className="transition-colors hover:text-[color:var(--c-primary)]">
+            Privacy Policy
+          </Link>
           <span>·</span>
-          <Link to="/about" className="hover:text-[color:var(--c-primary)] transition-colors">About</Link>
+          <Link to="/about" className="transition-colors hover:text-[color:var(--c-primary)]">
+            About
+          </Link>
         </div>
         <p>© {new Date().getFullYear()} Praveenkanth G. All rights reserved.</p>
         <p className="mt-1">Pibblora · A Little Magic in Every Click</p>
       </footer>
+
+      <MobileNavigation />
     </div>
   );
 }
@@ -120,7 +127,7 @@ export default function App() {
           <Route path="/settings" element={<Shell><SettingsPage /></Shell>} />
           <Route path="/extension" element={<Shell><ExtensionPage /></Shell>} />
           <Route path="/about" element={<Shell><About /></Shell>} />
-          <Route path="/privacy" element={<Shell><PrivacyPolicy /></Shell>} /> 
+          <Route path="/privacy" element={<Shell><PrivacyPolicy /></Shell>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
