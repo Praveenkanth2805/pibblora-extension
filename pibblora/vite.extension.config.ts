@@ -27,7 +27,7 @@ const copyExtensionFiles = () => ({
     }
 
     // 3. Copy local images for web_accessible_resources
-    const images = ['spider.png', 'spiderman.png'];
+    const images = ['spider.webp', 'spiderman.webp'];
     images.forEach((img) => {
       const source = path.join('public', img);
       const dest = path.join(outputDir, img);

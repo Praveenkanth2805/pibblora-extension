@@ -80,6 +80,20 @@ export default function Popup() {
         <div className="mt-2">
           <PetPreview type={settings.pet.type} animation={settings.pet.animation} size={40} color={settings.pet.color} customImage={settings.pet.customImage} />
         </div>
+        
+        {/* New Pet Size Slider */}
+        <div className="mt-3 flex items-center gap-2 border-t pt-3" style={{ borderColor: 'var(--c-border)' }}>
+          <span className="text-[10px] font-semibold opacity-70">Size</span>
+          <input 
+            type="range" 
+            min={32} 
+            max={120} 
+            value={settings.pet.size} 
+            onChange={(e) => update(s => ({ ...s, pet: { ...s.pet, size: Number(e.target.value) } }))}
+            className="flex-1 accent-[color:var(--c-primary)]" 
+          />
+          <span className="text-[10px] font-semibold opacity-50 w-6 text-right">{settings.pet.size}</span>
+        </div>
       </div>
 
       <div className="mb-4 rounded-2xl border p-3" style={{ background: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>

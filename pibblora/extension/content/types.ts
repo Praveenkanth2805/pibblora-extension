@@ -16,8 +16,8 @@ export const PRESET_COLORS: Record<string, string> = {
 };
 
 // Locally hosted image for Spiderman
-export const SPIDERMAN_IMG = chrome.runtime.getURL('spiderman.png');
-export const SPIDER_IMG = chrome.runtime.getURL('spider.png');
+export const SPIDERMAN_IMG = chrome.runtime.getURL('spiderman.webp');
+export const SPIDER_IMG = chrome.runtime.getURL('spider.webp');
 
 export const PET_ICONS: Record<string, string> = {
   cat: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg',
