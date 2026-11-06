@@ -51,7 +51,7 @@ const copyExtensionFiles = () => ({
 
 export default defineConfig({
   plugins: [react(), copyExtensionFiles()],
-  publicDir: false, // <-- ADDED THIS LINE: Stops Vite from copying the whole public folder
+  publicDir: false, // <--- ADD THIS LINE (Stops Vite from copying all public assets)
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src')
