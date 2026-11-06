@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Sparkles, Plus, LayoutTemplate, Upload } from 'lucide-react';
+import { Sparkles, Plus, LayoutTemplate, Upload, X } from 'lucide-react';
 import { useStore } from '../shared/StoreContext';
 import { PetPreview } from '../shared/PetPreview';
 import { Toggle } from '../shared/ui';
@@ -72,9 +72,24 @@ export default function Popup() {
               </button>
             );
           })}
-          <button onClick={() => fileInputRef.current?.click()} className="rounded-xl border p-1.5 flex items-center justify-center transition hover:scale-105" style={{ background: settings.pet.type === 'custom' ? 'var(--c-primary)' : 'transparent', borderColor: 'var(--c-border)' }} title="Upload Custom Pet">
-            {settings.pet.customImage ? <img src={settings.pet.customImage} alt="Custom" className="h-5 w-5 object-contain rounded-sm" /> : <Upload size={16} className="opacity-70" />}
-          </button>
+          <div className="relative">
+            <button onClick={() => fileInputRef.current?.click()} className="w-full h-full rounded-xl border p-1.5 flex items-center justify-center transition hover:scale-105" style={{ background: settings.pet.type === 'custom' ? 'var(--c-primary)' : 'transparent', borderColor: 'var(--c-border)' }} title="Upload Custom Pet">
+              {settings.pet.customImage ? <img src={settings.pet.customImage} alt="Custom" className="h-5 w-5 object-contain rounded-sm" /> : <Upload size={16} className="opacity-70" />}
+            </button>
+            {/* X Button to remove custom image */}
+            {settings.pet.customImage && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  update(s => ({ ...s, pet: { ...s.pet, customImage: '', type: 'cat' } }));
+                }} 
+                className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-sm z-10 transition-transform hover:scale-110" 
+                title="Remove custom pet"
+              >
+                <X size={10} />
+              </button>
+            )}
+          </div>
           <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
         </div>
         <div className="mt-2">

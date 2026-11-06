@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { ArrowLeft, Upload, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../shared/StoreContext';
 import { Card, Field, PageHeader, Section, Toggle } from '../../shared/ui';
@@ -91,15 +91,30 @@ useEffect(() => {
                 );
               })}
               
-              <button onClick={() => fileInputRef.current?.click()}
-                className={`rounded-2xl border p-2 flex items-center justify-center transition ${p.type === 'custom' ? 'ring-2' : ''}`}
-                style={{ background: p.type === 'custom' ? 'var(--c-primary)' : 'transparent', borderColor: 'var(--c-border)' }}>
-                {p.customImage ? (
-                  <img src={p.customImage} alt="Custom" className="h-8 w-8 object-contain" />
-                ) : (
-                  <Upload size={20} className="opacity-70" />
+              <div className="relative">
+                <button onClick={() => fileInputRef.current?.click()}
+                  className={`w-full h-full rounded-2xl border p-2 flex items-center justify-center transition ${p.type === 'custom' ? 'ring-2' : ''}`}
+                  style={{ background: p.type === 'custom' ? 'var(--c-primary)' : 'transparent', borderColor: 'var(--c-border)' }}>
+                  {p.customImage ? (
+                    <img src={p.customImage} alt="Custom" className="h-8 w-8 object-contain" />
+                  ) : (
+                    <Upload size={20} className="opacity-70" />
+                  )}
+                </button>
+                {/* X Button to remove custom image */}
+                {p.customImage && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      update(s => ({ ...s, pet: { ...s.pet, customImage: '', type: 'cat' } }));
+                    }} 
+                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-md z-10 transition-transform hover:scale-110" 
+                    title="Remove custom pet"
+                  >
+                    <X size={12} />
+                  </button>
                 )}
-              </button>
+              </div>
               <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
             </div>
           </Section>
