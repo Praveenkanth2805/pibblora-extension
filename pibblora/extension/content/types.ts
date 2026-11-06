@@ -16,18 +16,15 @@ export const PRESET_COLORS: Record<string, string> = {
 };
 
 // Locally hosted image for Spiderman
-export const SPIDERMAN_IMG = chrome.runtime.getURL('spiderman.webp');
-export const SPIDER_IMG = chrome.runtime.getURL('spider.webp');
-
 export const PET_ICONS: Record<string, string> = {
-  cat: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg',
-  bunny: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f430.svg',
-  star: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2b50.svg',
-  blob: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f47e.svg',
-  snail: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f40c.svg',
-  spider: SPIDER_IMG,
-  spiderman: SPIDERMAN_IMG, 
-  pikachu: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png',
+  cat: chrome.runtime.getURL('cat.webp'),
+  bunny: chrome.runtime.getURL('bunny.webp'),
+  star: chrome.runtime.getURL('star.webp'),
+  blob: chrome.runtime.getURL('blob.webp'),
+  snail: chrome.runtime.getURL('snail.webp'),
+  spider: chrome.runtime.getURL('spider.webp'),
+  spiderman: chrome.runtime.getURL('spiderman.webp'), 
+  pikachu: chrome.runtime.getURL('pikachu.webp'),
 };
 
 export const CURSOR_EMOJI: Record<string,string> = { stars: '✨', hearts: '💗', bubbles: '🫧', trail: '•', neon: '•' };

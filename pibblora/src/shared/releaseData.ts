@@ -8,9 +8,21 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
-    version: 'v1.3.0',
+    version: 'v1.4.0',
     date: 'Latest Release',
     isLatest: true,
+    url: 'https://github.com/Praveenkanth2805/pibblora-extension/releases/download/v1.4.0/pibblora-extension-v1.4.0.zip', // <-- v1.4.0 லிங்க்
+    changes: [
+      '⚡ Ultra-lightweight build (Reduced by 50% size)',
+      '📸 Converted all pet icons to local WebP (Instant Loading)',
+      '📏 New Pet Size Slider directly in the Popup',
+      '🕷️ Fixed Spider Web crawling & Hydration errors',
+    ],
+  },
+  {
+    version: 'v1.3.0',
+    date: 'Previous Release',
+    isLatest: false,
     url: 'https://github.com/Praveenkanth2805/pibblora-extension/releases/download/v1.3.0/pibblora-extension-v1.3.0.zip',
     changes: [
       '🕸️ Spider Web Building (X to O sequence)',

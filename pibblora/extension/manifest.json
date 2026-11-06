@@ -21,7 +21,7 @@
   "permissions": ["storage", "search"],
   "web_accessible_resources": [
     {
-      "resources": ["spiderman.webp", "spider.webp"],
+      "resources": ["*.webp"],
       "matches": ["<all_urls>"]
     }
   ],

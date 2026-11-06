@@ -26,19 +26,26 @@ const copyExtensionFiles = () => ({
       fs.copyFileSync(source, path.join(iconOutput, file));
     }
 
-    // 3. Copy local images for web_accessible_resources
-    const images = ['spider.webp', 'spiderman.webp'];
-    images.forEach((img) => {
-      const source = path.join('public', img);
-      const dest = path.join(outputDir, img);
+    // 3. Dynamically copy ONLY .webp images from public folder
+    const publicDir = path.join(__dirname, 'public');
+    if (fs.existsSync(publicDir)) {
+      const files = fs.readdirSync(publicDir);
+      let copiedCount = 0;
+
+      files.forEach((file) => {
+        if (file.endsWith('.webp')) {
+          const source = path.join(publicDir, file);
+          const dest = path.join(outputDir, file);
+          
+          fs.copyFileSync(source, dest);
+          copiedCount++;
+        }
+      });
       
-      if (fs.existsSync(source)) {
-        fs.copyFileSync(source, dest);
-        console.log(`✅ Copied ${img} to dist-extension`);
-      } else {
-        console.warn(`⚠️ Warning: public/${img} not found.`);
-      }
-    });
+      console.log(`✅ Copied ${copiedCount} .webp images to dist-extension`);
+    } else {
+      console.warn(`⚠️ Warning: public directory not found. Images won't be copied.`);
+    }
   }
 });
 

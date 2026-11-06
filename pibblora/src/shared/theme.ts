@@ -28,16 +28,14 @@ export function applyTheme(preset: ThemePreset) {
 export type PetIcon = { type: 'image'; src: string };
 
 export const petIcons: Record<string, PetIcon> = {
-  cat: { type: 'image', src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f431.svg' },
-  bunny: { type: 'image', src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f430.svg' },
-  star: { type: 'image', src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2b50.svg' },
-  blob: { type: 'image', src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f47e.svg' },
-  snail: { type: 'image', src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f40c.svg' },
-  spider: { type: 'image', src: '/spider.webp'  },
-  
-  spiderman: { type: 'image', src: '/spiderman.webp' },
-  
-  pikachu: { type: 'image', src: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png' },
+  cat: { type: 'image', src: '/cat.webp' },
+  bunny: { type: 'image', src: '/bunny.webp' },
+  star: { type: 'image', src: '/star.webp' },
+  blob: { type: 'image', src: '/blob.webp' },
+  snail: { type: 'image', src: '/snail.webp' },
+  spider: { type: 'image', src: '/spider.webp' },
+  spiderman: { type: 'image', src: '/spiderman.webp' }, // Assuming you converted this to webp as well
+  pikachu: { type: 'image', src: '/pikachu.webp' },
 };
 
 export const cursorEmoji: Record<string, string> = { stars: '✨', hearts: '💗', bubbles: '🫧', trail: '•', neon: '•' };
