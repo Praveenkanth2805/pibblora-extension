@@ -100,11 +100,11 @@ export default function About() {
 
   return (
     <>
-    <SEO
-      title="Pibblora Extension – Cute Chrome Browser Customization"
-      description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
-      path="/about"
-    />
+<SEO
+  title="About Pibblora – Created by Praveenkanth G"
+  description="Discover the story behind Pibblora, a Chrome browser customization extension created by Praveenkanth G, a software developer. Explore its features and creator links."
+  path="/about"
+/>
       <PageHeader
         title="About Pibblora"
         subtitle="A little magic in every click."
@@ -236,7 +236,7 @@ export default function About() {
                 </h3>
 
                 <p className="mt-1 text-xs font-medium text-purple-900/60">
-                  Software Developer
+                  Software Developer · Creator of Pibblora
                 </p>
 
                 <p className="mt-3 text-xs leading-6 text-purple-950/65">

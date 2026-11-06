@@ -4,6 +4,7 @@ import { Cat, MousePointer2, Palette, LayoutGrid, Chrome } from 'lucide-react';
 import { Button, Card } from '../../shared/ui';
 import { ExtensionDownload } from '../components/ExtensionDownload';
 import SEO from '../../shared/SEO';
+import StructuredData from '../../shared/StructuredData';
 
 const features = [
   { icon: Cat, title: 'Browser Buddy', desc: 'Animated companions that live on your pages.' },
@@ -20,6 +21,7 @@ export default function Landing() {
       description="Discover Pibblora Chrome Extension. Customize your browser with virtual pets, magical cursor effects, pastel themes, widgets and a dreamy new tab."
       path="/"
     />
+    <StructuredData />
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold">
           <img
@@ -50,12 +52,13 @@ export default function Landing() {
             </span>
 
             <h1 className="mt-4 font-display text-5xl font-bold leading-tight">
-              A Little Magic in Every Click.
+              Pibblora – A Little Magic in Every Click.
             </h1>
 
             <p className="mt-4 max-w-md text-base opacity-75">
-              Pibblora turns your browser into a soft, playful place — with animated pets,
-              cursor sparkles, pastel themes, and a dreamy new tab.
+                Pibblora is a cute Chrome extension that transforms your browser
+  with animated virtual pets, magical cursor effects, customizable
+  pastel themes, useful widgets, and a dreamy new tab experience.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
