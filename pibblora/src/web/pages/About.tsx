@@ -210,6 +210,7 @@ export default function About() {
 
           {/* Creator */}
           <motion.section
+            id="creator"
             variants={fadeUp}
             className={`${cardBase} p-5 sm:p-6 lg:col-span-4 lg:row-span-2`}
             style={{

@@ -19,6 +19,19 @@ const structuredData = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+  '@type': 'WebSite',
+  '@id': `${BASE_URL}/#website`,
+  name: 'Pibblora',
+  alternateName: 'Pibblora Chrome Extension',
+  url: BASE_URL,
+  description:
+    'Explore Pibblora, a playful Chrome extension featuring virtual pets, custom cursors, pastel themes, widgets and a personalized new tab.',
+  publisher: {
+    '@id': `${BASE_URL}/#organization`,
+  },
+  inLanguage: 'en',
+},
+    {
       '@type': 'Organization',
       '@id': `${BASE_URL}/#organization`,
       name: 'Pibblora',
